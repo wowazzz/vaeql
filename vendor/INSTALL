@@ -1,0 +1,6 @@
+Setting up antlr on your dev machine:
+
+cd vendor/libantlr3c-3.2
+./configure --enable-64bit
+make
+make install
