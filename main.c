@@ -12,7 +12,7 @@ int ANTLR3_CDECL main(int argc, char *argv[]) {
 
   //pVerbQueryLanguageDumpDecl		    treePsr;
 
-  input = antlr3NewAsciiStringInPlaceStream (argv[1], (ANTLR3_UINT64)strlen(argv[1]), NULL);
+  input = antlr3NewAsciiStringInPlaceStream ((uint8_t *)argv[1], (ANTLR3_UINT64)strlen(argv[1]), NULL);
 
   lxr	= VerbQueryLanguageLexerNew(input);
   if (lxr == NULL) {

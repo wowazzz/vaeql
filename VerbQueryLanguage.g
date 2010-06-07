@@ -58,7 +58,7 @@ sqlquery
 
 expr
 	:	NOT expr -> ^(NOT expr) 
-	| value_expr (operator^ value_expr)*
+	| value_expr (oper^ value_expr)*
 	;
 
 value_expr
@@ -85,7 +85,7 @@ predicate
 	:	LBRACKET expr RBRACKET -> ^(NODE_PREDICATE expr)
 	;
 	
-operator
+oper
 	:	EQUALITY | EQUALITY_ALT | INEQUALITY | INEQUALITY_ALT | LESS | LTE | GREATER | GTE | AND | AND_ALT | OR | OR_ALT | XOR | XOR_ALT | ADD | SUB | MULT | SLASH | MOD 
 	;
 
