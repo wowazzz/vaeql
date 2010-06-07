@@ -40,9 +40,9 @@ verbql.o: verbql.cpp
 	${CXX} ${CFLAGS} verbql.cpp
 	
 verbql.so: VerbQueryLanguageLexer.o VerbQueryLanguageParser.o verbql.o verbql_wrap.o
-	${C} -shared -fPIC -Wl,-undefined,dynamic_lookup verbql.o verbql_wrap.o ${LIBS} -o verbql.so
+	${CXX} -shared -fPIC -Wl,-undefined,dynamic_lookup verbql.o verbql_wrap.o ${OBJS} /usr/local/lib/libantlr3c.a -o verbql.so
 	
-verbql_wrap.o: verbql_wrap.cpp php_verbql.h
+verbql_wrap.o: verbql_wrap.cpp php_VerbQueryLanguage.h
 	${CXX} `php-config --includes` -fpic -c verbql_wrap.cpp
 	
 VerbQueryLanguageLexer.o: ${HEADERS}

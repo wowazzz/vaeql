@@ -10,6 +10,7 @@
 
 #define SWIGPHP
 
+#define SWIG_DIRECTORS
 
 #ifdef __cplusplus
 /* SwigValueWrapper is described in swig.swg */
@@ -1002,8 +1003,9 @@ static int le_member_ptr;
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define SWIGTYPE_p_VerbQueryLanguage swig_types[0]
-static swig_type_info *swig_types[2];
-static swig_module_info swig_module = {swig_types, 1, 0, 0, 0, 0};
+#define SWIGTYPE_p_char swig_types[1]
+static swig_type_info *swig_types[3];
+static swig_module_info swig_module = {swig_types, 2, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -1078,6 +1080,201 @@ extern "C" {
 }
 #endif
 
+/* -----------------------------------------------------------------------------
+ * director.swg
+ *
+ * This file contains support for director classes that proxy
+ * method calls from C++ to PHP extensions.
+ * ----------------------------------------------------------------------------- */
+
+#ifndef SWIG_DIRECTOR_PHP_HEADER_
+#define SWIG_DIRECTOR_PHP_HEADER_
+
+#ifdef __cplusplus
+
+#include <string>
+#include <map>
+
+/*
+  Use -DSWIG_DIRECTOR_STATIC if you prefer to avoid the use of the
+  'Swig' namespace. This could be useful for multi-modules projects.
+*/
+#ifdef SWIG_DIRECTOR_STATIC
+/* Force anonymous (static) namespace */
+#define Swig
+#endif
+
+namespace Swig {
+  /* memory handler */
+  struct GCItem
+  {
+    virtual ~GCItem() {}
+
+    virtual int get_own() const
+    {
+      return 0;
+    }
+  };
+
+  struct GCItem_var
+  {
+    GCItem_var(GCItem *item = 0) : _item(item)
+    {
+    }
+
+    GCItem_var& operator=(GCItem *item)
+    {
+      GCItem *tmp = _item;
+      _item = item;
+      delete tmp;
+      return *this;
+    }
+
+    ~GCItem_var()
+    {
+      delete _item;
+    }
+
+    GCItem * operator->() const
+    {
+      return _item;
+    }
+
+    private:
+    GCItem *_item;
+  };
+
+  struct GCItem_Object : GCItem
+  {
+    GCItem_Object(int own) : _own(own)
+    {
+    }
+
+    virtual ~GCItem_Object()
+    {
+    }
+
+    int get_own() const
+    {
+      return _own;
+    }
+
+    private:
+    int _own;
+  };
+
+  template <typename Type>
+  struct GCItem_T : GCItem
+  {
+    GCItem_T(Type *ptr) : _ptr(ptr)
+    {
+    }
+
+    virtual ~GCItem_T()
+    {
+      delete _ptr;
+    }
+
+    private:
+    Type *_ptr;
+  };
+
+  class Director {
+    protected:
+      zval *swig_self;
+      typedef std::map<void*, GCItem_var> swig_ownership_map;
+      mutable swig_ownership_map swig_owner;
+    public:
+      Director(zval* self) : swig_self(self) {
+      }
+
+      ~Director() {
+        for (swig_ownership_map::iterator i = swig_owner.begin(); i != swig_owner.end(); i++) {
+          swig_owner.erase(i);
+        }
+      }
+
+      bool swig_is_overridden_method(char *cname, char *lc_fname) {
+        zval classname;
+        zend_class_entry **ce;
+        zend_function *mptr;
+        int name_len = strlen(lc_fname);
+        
+        ZVAL_STRING(&classname, cname, 0);
+        if (zend_lookup_class(Z_STRVAL_P(&classname), Z_STRLEN_P(&classname), &ce TSRMLS_CC) != SUCCESS) {
+          return false;
+        }
+        if (zend_hash_find(&(*ce)->function_table, lc_fname, name_len + 1, (void**) &mptr) != SUCCESS) {
+          return false;
+        }
+        // common.scope points to the declaring class
+        return strcmp(mptr->common.scope->name, cname);
+      }
+
+      template <typename Type>
+      void swig_acquire_ownership(Type *vptr) const
+      {
+        if (vptr) {
+          swig_owner[vptr] = new GCItem_T<Type>(vptr);
+        }
+      }
+  };
+
+  /* base class for director exceptions */
+  class DirectorException {
+  protected:
+    std::string swig_msg;
+  public:
+    DirectorException(int code, const char *hdr, const char* msg)
+      : swig_msg(hdr)
+    {
+      if (strlen(msg)) {
+        swig_msg += " ";
+        swig_msg += msg;
+      }
+      SWIG_ErrorCode() = code;
+      SWIG_ErrorMsg() = swig_msg.c_str();
+    }
+
+    static void raise(int code, const char *hdr, const char* msg) 
+    {
+      throw DirectorException(code, hdr, msg);
+    }
+  };
+
+  /* attempt to call a pure virtual method via a director method */
+  class DirectorPureVirtualException : public Swig::DirectorException
+  {
+  public:
+    DirectorPureVirtualException(const char* msg) 
+      : DirectorException(E_ERROR, "SWIG director pure virtual method called", msg)
+    { 
+    }
+
+    static void raise(const char *msg) 
+    {
+      throw DirectorPureVirtualException(msg);
+    }
+  };
+  /* any php exception that occurs during a director method call */
+  class DirectorMethodException : public Swig::DirectorException
+  {
+  public:
+    DirectorMethodException(const char* msg = "") 
+      : DirectorException(E_ERROR, "SWIG director method error", msg)
+    { 
+    }
+
+    static void raise(const char *msg) 
+    {
+      throw DirectorMethodException(msg);
+    }
+  };
+}
+
+#endif /* __cplusplus */
+
+#endif
 
 #include "verbql.h"
 
@@ -1085,77 +1282,76 @@ extern "C" {
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
 static swig_type_info _swigt__p_VerbQueryLanguage = {"_p_VerbQueryLanguage", "VerbQueryLanguage *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_VerbQueryLanguage,
+  &_swigt__p_char,
 };
 
 static swig_cast_info _swigc__p_VerbQueryLanguage[] = {  {&_swigt__p_VerbQueryLanguage, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_VerbQueryLanguage,
+  _swigc__p_char,
 };
 
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (END) -------- */
 
 /* end header section */
-/* vdecl subsection */
-static int le_swig__p_VerbQueryLanguage=0; /* handle for VerbQueryLanguage */
-/* end vdecl subsection */
-/* wrapper section */
-ZEND_NAMED_FUNCTION(_wrap_VerbQueryLanguage_query) {
-  char *arg1 = (char *) 0 ;
-  zval **args[1];
-  char *result = 0 ;
+
+#include "verbql_wrap.h"
+
+SwigDirector_VerbQueryLanguage::SwigDirector_VerbQueryLanguage(zval *self): VerbQueryLanguage(), Swig::Director(self) {
   
-  SWIG_ResetError();
-  if(ZEND_NUM_ARGS() != 1 || zend_get_parameters_array_ex(1, args) != SUCCESS) {
-    WRONG_PARAM_COUNT;
+}
+
+
+
+SwigDirector_VerbQueryLanguage::~SwigDirector_VerbQueryLanguage() {
+}
+
+char *SwigDirector_VerbQueryLanguage::resolvePath(char *path) {
+  char *c_result;
+  zval *args[1];
+  zval *result, funcname;
+  MAKE_STD_ZVAL(result);
+  ZVAL_STRING(&funcname, (char *)"resolvePath", 0);
+  if (!swig_self) {
+    SWIG_PHP_Error(E_ERROR, "this pointer is NULL");
   }
   
+  zval obj0;
+  args[0] = &obj0;
+  
+  SWIG_SetPointerZval(&obj0, (void *)&path, SWIGTYPE_p_char, 0);
+  
+  call_user_function(EG(function_table), (zval**)&swig_self, &funcname,
+    result, 1, args TSRMLS_CC);
   
   /*@SWIG:/usr/local/share/swig/2.0.0/php/utils.i,62,CONVERT_STRING_IN@*/
-  if ((*args[0])->type==IS_NULL) {
-    arg1 = (char *) 0;
+  if ((*&result)->type==IS_NULL) {
+    c_result = (char *) 0;
   } else {
-    convert_to_string_ex(args[0]);
-    arg1 = (char *) Z_STRVAL_PP(args[0]);
+    convert_to_string_ex(&result);
+    c_result = (char *) Z_STRVAL_PP(&result);
   }
   /*@SWIG@*/;
   
-  result = (char *)VerbQueryLanguage::query(arg1);
-  {
-    if(!result) {
-      ZVAL_NULL(return_value);
-    } else {
-      ZVAL_STRING(return_value, (char *)result, 1);
-    }
-  }
-  return;
+  FREE_ZVAL(result);
+  return (char *) c_result;
 fail:
   zend_error_noreturn(SWIG_ErrorCode(),"%s",SWIG_ErrorMsg());
 }
 
 
-ZEND_NAMED_FUNCTION(_wrap_new_VerbQueryLanguage) {
-  VerbQueryLanguage *result = 0 ;
-  
-  SWIG_ResetError();
-  if(ZEND_NUM_ARGS() != 0) {
-    WRONG_PARAM_COUNT;
-  }
-  
-  result = (VerbQueryLanguage *)new VerbQueryLanguage();
-  
-  SWIG_SetPointerZval(return_value, (void *)result, SWIGTYPE_p_VerbQueryLanguage, 1);
-  
-  return;
-fail:
-  zend_error_noreturn(SWIG_ErrorCode(),"%s",SWIG_ErrorMsg());
-}
-
-
+/* vdecl subsection */
+static int le_swig__p_char=0; /* handle for _p_char */
+static int le_swig__p_VerbQueryLanguage=0; /* handle for VerbQueryLanguage */
+/* end vdecl subsection */
+/* wrapper section */
 /* This function is designed to be called by the zend list destructors */
 /* to typecast and do the actual destruction */
 static void __wrap_delete_VerbQueryLanguage(zend_rsrc_list_entry *rsrc, const char *type_name TSRMLS_DC) {
@@ -1175,6 +1371,128 @@ fail:
 }
 
 
+ZEND_NAMED_FUNCTION(_wrap_VerbQueryLanguage_query) {
+  VerbQueryLanguage *arg1 = (VerbQueryLanguage *) 0 ;
+  char *arg2 = (char *) 0 ;
+  zval **args[2];
+  char *result = 0 ;
+  
+  SWIG_ResetError();
+  if(ZEND_NUM_ARGS() != 2 || zend_get_parameters_array_ex(2, args) != SUCCESS) {
+    WRONG_PARAM_COUNT;
+  }
+  
+  {
+    if(SWIG_ConvertPtr(*args[0], (void **) &arg1, SWIGTYPE_p_VerbQueryLanguage, 0) < 0) {
+      SWIG_PHP_Error(E_ERROR, "Type error in argument 1 of VerbQueryLanguage_query. Expected SWIGTYPE_p_VerbQueryLanguage");
+    }
+  }
+  if(!arg1) SWIG_PHP_Error(E_ERROR, "this pointer is NULL");
+  
+  /*@SWIG:/usr/local/share/swig/2.0.0/php/utils.i,62,CONVERT_STRING_IN@*/
+  if ((*args[1])->type==IS_NULL) {
+    arg2 = (char *) 0;
+  } else {
+    convert_to_string_ex(args[1]);
+    arg2 = (char *) Z_STRVAL_PP(args[1]);
+  }
+  /*@SWIG@*/;
+  
+  result = (char *)(arg1)->query(arg2);
+  {
+    if(!result) {
+      ZVAL_NULL(return_value);
+    } else {
+      ZVAL_STRING(return_value, (char *)result, 1);
+    }
+  }
+  return;
+fail:
+  zend_error_noreturn(SWIG_ErrorCode(),"%s",SWIG_ErrorMsg());
+}
+
+
+ZEND_NAMED_FUNCTION(_wrap_VerbQueryLanguage_resolvePath) {
+  VerbQueryLanguage *arg1 = (VerbQueryLanguage *) 0 ;
+  char *arg2 = (char *) 0 ;
+  zval **args[2];
+  Swig::Director *director = 0;
+  bool upcall = false;
+  char *result = 0 ;
+  
+  director = dynamic_cast<Swig::Director*>(arg1);
+  upcall = !director->swig_is_overridden_method((char *)"VerbQueryLanguage", (char *)"resolvePath");
+  SWIG_ResetError();
+  if(ZEND_NUM_ARGS() != 2 || zend_get_parameters_array_ex(2, args) != SUCCESS) {
+    WRONG_PARAM_COUNT;
+  }
+  
+  {
+    if(SWIG_ConvertPtr(*args[0], (void **) &arg1, SWIGTYPE_p_VerbQueryLanguage, 0) < 0) {
+      SWIG_PHP_Error(E_ERROR, "Type error in argument 1 of VerbQueryLanguage_resolvePath. Expected SWIGTYPE_p_VerbQueryLanguage");
+    }
+  }
+  if(!arg1) SWIG_PHP_Error(E_ERROR, "this pointer is NULL");
+  
+  /*@SWIG:/usr/local/share/swig/2.0.0/php/utils.i,62,CONVERT_STRING_IN@*/
+  if ((*args[1])->type==IS_NULL) {
+    arg2 = (char *) 0;
+  } else {
+    convert_to_string_ex(args[1]);
+    arg2 = (char *) Z_STRVAL_PP(args[1]);
+  }
+  /*@SWIG@*/;
+  
+  if (upcall) {
+    result = (char *)(arg1)->VerbQueryLanguage::resolvePath(arg2);
+  } else {
+    result = (char *)(arg1)->resolvePath(arg2);
+  }
+  {
+    if(!result) {
+      ZVAL_NULL(return_value);
+    } else {
+      ZVAL_STRING(return_value, (char *)result, 1);
+    }
+  }
+  return;
+fail:
+  zend_error_noreturn(SWIG_ErrorCode(),"%s",SWIG_ErrorMsg());
+}
+
+
+ZEND_NAMED_FUNCTION(_wrap_new_VerbQueryLanguage) {
+  zval *arg0;
+  zval **args[1];
+  VerbQueryLanguage *result = 0 ;
+  
+  SWIG_ResetError();
+  if(ZEND_NUM_ARGS() != 1 || zend_get_parameters_array_ex(1, args) != SUCCESS) {
+    WRONG_PARAM_COUNT;
+  }
+  
+  arg0 = *args[0];
+  
+  if ( arg0->type == IS_NULL ) {
+    /* not subclassed */
+    result = (VerbQueryLanguage *)new VerbQueryLanguage();
+  } else {
+    result = (VerbQueryLanguage *)new SwigDirector_VerbQueryLanguage(arg0);
+  }
+  
+  
+  SWIG_SetPointerZval(return_value, (void *)result, SWIGTYPE_p_VerbQueryLanguage, 1);
+  
+  return;
+fail:
+  zend_error_noreturn(SWIG_ErrorCode(),"%s",SWIG_ErrorMsg());
+}
+
+
+static ZEND_RSRC_DTOR_FUNC(_wrap_destroy_p_char) {
+  /* No destructor for simple type _p_char */
+  efree(rsrc->ptr);
+}
 static ZEND_RSRC_DTOR_FUNC(_wrap_destroy_p_VerbQueryLanguage) {
   __wrap_delete_VerbQueryLanguage(rsrc, SWIGTYPE_p_VerbQueryLanguage->name TSRMLS_CC);
 }
@@ -1186,6 +1504,7 @@ static ZEND_RSRC_DTOR_FUNC(_wrap_destroy_p_VerbQueryLanguage) {
 /* Every non-class user visible function must have an entry here */
 static zend_function_entry VerbQueryLanguage_functions[] = {
  SWIG_ZEND_NAMED_FE(verbquerylanguage_query,_wrap_VerbQueryLanguage_query,NULL)
+ SWIG_ZEND_NAMED_FE(verbquerylanguage_resolvepath,_wrap_VerbQueryLanguage_resolvePath,NULL)
  SWIG_ZEND_NAMED_FE(new_verbquerylanguage,_wrap_new_VerbQueryLanguage,NULL)
  SWIG_ZEND_NAMED_FE(swig_VerbQueryLanguage_alter_newobject,_wrap_swig_VerbQueryLanguage_alter_newobject,NULL)
  SWIG_ZEND_NAMED_FE(swig_VerbQueryLanguage_get_newobject,_wrap_swig_VerbQueryLanguage_get_newobject,NULL)
@@ -1470,6 +1789,8 @@ SWIG_PropagateClientData(void) {
 ZEND_INIT_MODULE_GLOBALS(VerbQueryLanguage, VerbQueryLanguage_init_globals, VerbQueryLanguage_destroy_globals);
 
 /* Register resource destructors for pointer types */
+le_swig__p_char=zend_register_list_destructors_ex(_wrap_destroy_p_char,NULL,(char *)(SWIGTYPE_p_char->name),module_number);
+SWIG_TypeClientData(SWIGTYPE_p_char,&le_swig__p_char);
 le_swig__p_VerbQueryLanguage=zend_register_list_destructors_ex(_wrap_destroy_p_VerbQueryLanguage,NULL,(char *)(SWIGTYPE_p_VerbQueryLanguage->name),module_number);
 SWIG_TypeClientData(SWIGTYPE_p_VerbQueryLanguage,&le_swig__p_VerbQueryLanguage);
 CG(active_class_entry) = NULL;

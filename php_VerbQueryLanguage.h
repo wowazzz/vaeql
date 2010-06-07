@@ -31,5 +31,6 @@ PHP_RSHUTDOWN_FUNCTION(VerbQueryLanguage);
 PHP_MINFO_FUNCTION(VerbQueryLanguage);
 
 ZEND_NAMED_FUNCTION(_wrap_VerbQueryLanguage_query);
+ZEND_NAMED_FUNCTION(_wrap_VerbQueryLanguage_resolvePath);
 ZEND_NAMED_FUNCTION(_wrap_new_VerbQueryLanguage);
 #endif /* PHP_VERBQUERYLANGUAGE_H */

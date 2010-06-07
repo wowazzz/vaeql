@@ -1,11 +1,14 @@
-%module VerbQueryLanguage
+%module(directors="1") VerbQueryLanguage
 %{
 #include "verbql.h"
 %}
 
+%feature("director") VerbQueryLanguage;
 class VerbQueryLanguage {
   
 public:
-  static char *query(char *input);
+  virtual ~VerbQueryLanguage();
+  char *query(char *input);
+  virtual char *resolvePath(char *path);
   
 };

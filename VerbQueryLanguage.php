@@ -46,8 +46,12 @@ class VerbQueryLanguage {
 		return $this->_pData[$var];
 	}
 
-	static function query($input) {
-		return VerbQueryLanguage_query($input);
+	public function query($input) {
+		return VerbQueryLanguage_query($this->_cPtr,$input);
+	}
+
+	public function resolvePath($path) {
+		return VerbQueryLanguage_resolvePath($this->_cPtr,$path);
 	}
 
 	public function __construct($res=null) {
@@ -55,7 +59,12 @@ class VerbQueryLanguage {
 			$this->_cPtr=$res;
 			return;
 		}
-		$this->_cPtr=new_VerbQueryLanguage();
+		if (get_class($this) === 'VerbQueryLanguage') {
+			$_this = null;
+		} else {
+			$_this = $this;
+		}
+		$this->_cPtr=new_VerbQueryLanguage($_this);
 	}
 }
 

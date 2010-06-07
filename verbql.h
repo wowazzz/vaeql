@@ -1,6 +1,8 @@
 class VerbQueryLanguage {
   
 public:
-  static char *query(char *input);
+  ~VerbQueryLanguage();
+  char *query(char *input);
+  virtual char *resolvePath(char *input);
   
 };
