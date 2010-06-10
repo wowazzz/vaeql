@@ -1,20 +1,24 @@
 #include "VerbQueryLanguageLexer.h"
 #include "VerbQueryLanguageParser.h"
+#include "VerbQueryLanguageTreeParser.h"
+
+extern int VerbQueryLanguagePath;
 
 int ANTLR3_CDECL main(int argc, char *argv[]) {
-  pVerbQueryLanguageLexer	lxr;
-  pVerbQueryLanguageParser psr;
   VerbQueryLanguageParser_start_return langAST;
   
-  pANTLR3_INPUT_STREAM input;
+  pVerbQueryLanguageLexer	lxr;
+  pVerbQueryLanguageParser psr;
+  pVerbQueryLanguageTreeParser treePsr;
+  
+  pANTLR3_INPUT_STREAM istream;
   pANTLR3_COMMON_TOKEN_STREAM	tstream;
   pANTLR3_COMMON_TREE_NODE_STREAM	nodes;
+  pANTLR3_STRING result;
 
-  //pVerbQueryLanguageDumpDecl		    treePsr;
+  istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)argv[1], (ANTLR3_UINT64)strlen(argv[1]), NULL);
 
-  input = antlr3NewAsciiStringInPlaceStream ((uint8_t *)argv[1], (ANTLR3_UINT64)strlen(argv[1]), NULL);
-
-  lxr	= VerbQueryLanguageLexerNew(input);
+  lxr	= VerbQueryLanguageLexerNew(istream);
   if (lxr == NULL) {
 		fprintf(stderr, "Unable to create the lexer due to malloc() failure1\n");
 		exit(ANTLR3_ERR_NOMEM);
@@ -30,23 +34,24 @@ int ANTLR3_CDECL main(int argc, char *argv[]) {
 		exit(ANTLR3_ERR_NOMEM);
   }
   langAST = psr->start(psr);
-	if (psr->pParser->rec->state->errorCount > 0) {
-		fprintf(stderr, "The parser returned %d errors, tree walking aborted.\n", psr->pParser->rec->state->errorCount);
-	} else {
+	if (psr->pParser->rec->state->errorCount == 0) {
 		nodes	= antlr3CommonTreeNodeStreamNewTree(langAST.tree, ANTLR3_SIZE_HINT);
 		printf("Nodes: %s\n", langAST.tree->toStringTree(langAST.tree)->chars);
-/*
-		treePsr	= VerbQueryLanguageDumpDeclNew(nodes);
-
-		treePsr->decl(treePsr);
-		nodes   ->free  (nodes);	    nodes	= NULL;
-		treePsr ->free  (treePsr);	    treePsr	= NULL;*/
-	}
-
-	psr	    ->free  (psr);		psr		= NULL;
-	tstream ->free  (tstream);	tstream	= NULL;
-	lxr	    ->free  (lxr);	    lxr		= NULL;
-	input   ->close (input);	input	= NULL;
-
+    treePsr	= VerbQueryLanguageTreeParserNew(nodes);
+	  result = treePsr->start(treePsr);
+	  treePsr->free(treePsr);
+	  if (VerbQueryLanguagePath) {
+      printf("Path: %s\n", result->chars);
+    } else {
+      printf("Result: %s\n", result->chars);
+    }
+	  nodes->free(nodes);
+	} else {
+    printf("Unable to parse VerbQL Expression\n");
+  }
+	tstream->free(tstream);
+	psr->free(psr);
+	lxr->free(lxr);
+	istream->close(istream);
   return 0;
 }

@@ -1276,7 +1276,10 @@ namespace Swig {
 
 #endif
 
-#include "verbql.h"
+#include "VerbQueryLanguageLexer.h"
+#include "VerbQueryLanguageParser.h"
+#include "VerbQueryLanguageTreeParser.h"
+#include "php_verbql.h"
 
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */

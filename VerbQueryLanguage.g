@@ -1,21 +1,17 @@
 grammar VerbQueryLanguage;
 
 options {
-    language=C;
-    output=AST;
+  language = C;
+  output = AST;
 }
 
 tokens {
-	NODE_STRING;
-	NODE_VARIABLE;
-	NODE_OPERATOR;
-	NODE_FUNCTION;
-	NODE_PREDICATE;
-	NODE_PATH;
+	NODE_PREDICATE ;
+	NODE_PATH ;
 
 	SLASH = '/' ;
 	SQL = '~' ;
-	AT = '@';
+	AT = '@' ;
 	
 	EQUALITY = '==' ;
 	EQUALITY_ALT = '=' ;
@@ -53,7 +49,7 @@ start
 	;
 
 sqlquery
-	:	SQL PATH -> ^(SQL PATH)
+	:	SQL PATH -> ^(NODE_PATH SQL PATH)
 	;
 
 expr
@@ -67,13 +63,11 @@ value_expr
 	;
 
 value
-	:	VARIABLE -> ^(NODE_VARIABLE VARIABLE)
-	|	STRING -> ^(NODE_STRING STRING)
-	| INT | FLOAT
+	:	VARIABLE | STRING | INT | FLOAT
 	;
 
 function
-	:	FUNCTION expr? (COMMA expr)* RPAREN -> ^(NODE_FUNCTION FUNCTION expr (COMMA expr)*)
+	:	FUNCTION expr? (COMMA expr)* RPAREN -> ^(FUNCTION expr (COMMA expr)*)
 	;
 	
 path
@@ -82,7 +76,20 @@ path
 	;
 
 predicate
-	:	LBRACKET expr RBRACKET -> ^(NODE_PREDICATE expr)
+	:	LBRACKET predicate_expr RBRACKET -> ^(NODE_PREDICATE predicate_expr)
+	;
+	
+predicate_expr
+  : INT
+	| predicate_value_expr predicate_oper predicate_value_expr
+	;
+	
+predicate_value_expr
+	:	(value | function | path)
+	;
+	
+predicate_oper
+	:	EQUALITY | EQUALITY_ALT | INEQUALITY | INEQUALITY_ALT | LESS | LTE | GREATER | GTE | AND | AND_ALT | OR | OR_ALT 
 	;
 	
 oper

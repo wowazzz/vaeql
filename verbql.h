@@ -1,8 +1,6 @@
-class VerbQueryLanguage {
-  
-public:
-  ~VerbQueryLanguage();
-  char *query(char *input);
-  virtual char *resolvePath(char *input);
-  
-};
+#ifndef VEBRQL_H_
+#define VEBRQL_H_
+
+// stuff will go here eventually
+
+#endif
