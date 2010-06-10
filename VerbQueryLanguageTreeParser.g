@@ -22,6 +22,10 @@ options
     return strcmp(a->chars, "");
   }
   
+  int asInt(pANTLR3_STRING a) {
+    return atoi(a->chars);
+  }
+  
   double asNumber(pANTLR3_STRING a) {
     return strtod(a->chars, NULL);
   }
@@ -37,6 +41,12 @@ options
     } else {
       return e->strFactory->newStr(e->strFactory, "0");
     }
+  }
+  
+  pANTLR3_STRING numberResponse(double t, pANTLR3_BASE_TREE e) {
+    char buf[30];
+    sprintf(buf, "\%lg", t);
+    return e->strFactory->newStr(e->strFactory, buf);
   }
 }
 
@@ -137,7 +147,28 @@ returns [ pANTLR3_STRING result ]
     {
       $result = booleanResponse(asBoolean($e1.result) || asBoolean($e2.result), $e);
     }
+	|	^((e=XOR | e=XOR_ALT) e1=expr e2=expr)
+    {
+      $result = booleanResponse(asBoolean($e1.result) ^ asBoolean($e2.result), $e);
+    }
+	|	^(e=ADD e1=expr e2=expr)
+    {
+      $result = numberResponse(asNumber($e1.result) + asNumber($e2.result), $e);
+    }
+	|	^(e=SUB e1=expr e2=expr)
+    {
+      $result = numberResponse(asNumber($e1.result) - asNumber($e2.result), $e);
+    }
+	|	^(e=MULT e1=expr e2=expr)
+    {
+      $result = numberResponse(asNumber($e1.result) * asNumber($e2.result), $e);
+    }
+	|	^(e=SLASH e1=expr e2=expr)
+    {
+      $result = numberResponse(asNumber($e1.result) / asNumber($e2.result), $e);
+    }
+	|	^(e=MOD e1=expr e2=expr)
+    {
+      $result = numberResponse(asInt($e1.result) \% asInt($e2.result), $e);
+    }
 	;
-
-
-/* TOOO:  XOR | XOR_ALT | ADD | SUB | MULT | SLASH | MOD  */
