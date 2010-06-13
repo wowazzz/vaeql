@@ -1,18 +1,23 @@
 grammar VerbQueryLanguage;
-
 options {
   language = C;
   output = AST;
 }
 
 tokens {
-	NODE_PREDICATE ;
+  NODE_ARGUMENTS ;
+  NODE_FUNCTION ;
 	NODE_PATH ;
+	NODE_PREDICATE ;
+	NODE_SQL ;
+	NODE_VALUE ;
 
+	DIV = '//' ;
 	SLASH = '/' ;
 	SQL = '~' ;
 	AT = '@' ;
 	
+	XPATH_AXIS_SEP = '::' ;
 	EQUALITY = '==' ;
 	EQUALITY_ALT = '=' ;
 	INEQUALITY = '!=' ;
@@ -30,6 +35,9 @@ tokens {
 	MULT = '*' ;
 	MOD = '%';
 	
+	PIPE = '|';
+	POOPOO = '$$$$$$$$$$$$' ;
+	
 	IFTRUE = '?' ;
 	IFFALSE = ':' ;
 	
@@ -43,59 +51,151 @@ tokens {
 /*------------------------------------------------------------------
  * PARSER RULES
  *------------------------------------------------------------------*/
-
+ 
 start
-	:	(expr | sqlquery) EOF 
+	:	expr EOF -> ^(expr)
+	| sqlQuery EOF -> ^(sqlQuery)
 	;
-
-sqlquery
-	:	SQL PATH -> ^(NODE_PATH SQL PATH)
+	
+sqlQuery
+	:	SQL pathStep -> ^(NODE_SQL pathStep)
 	;
-
+	
 expr
-	:	NOT expr -> ^(NOT expr) 
-	| value_expr (oper^ value_expr)*
+  : notExpr
+	| orExpr
 	;
+	
+notExpr
+	:	NOT expr -> ^(NOT expr) 
+	;
+	
+orExpr
+  : xorExpr (orOper^ xorExpr)*
+  ;
+  	
+xorExpr
+  : andExpr (xorOper^ andExpr)*
+  ;
+  
+andExpr
+  : comparisonExpr (andOper^ comparisonExpr)*
+  ;
 
-value_expr
+comparisonExpr
+  : addSubExpr (comparisonOper^ addSubExpr)*
+  ;
+
+addSubExpr
+  : multExpr (addSubOper^ multExpr)*
+  ;
+
+multExpr
+  : valueExpr (multOper^ valueExpr)*
+  ;
+
+valueExpr
 	: (LPAREN expr RPAREN) -> ^(expr)
 	|	(value | function | path)
 	;
+	
+function
+	: FUNCTION expressionList? RPAREN -> ^(NODE_FUNCTION FUNCTION expressionList?)
+	;
+	
+expressionList
+  : expr ( COMMA expr )* -> ^(NODE_ARGUMENTS expr+)
+  ;	
+
+path 
+  : unionPath -> ^(NODE_PATH unionPath)
+  | idPath -> ^(NODE_PATH idPath)
+  | absolutePath -> ^(NODE_PATH absolutePath)
+  ;
+    
+absolutePath 
+  : SLASH unionPath?
+  ;
+  
+idPath
+	: INT SLASH relativePath
+	;
+  
+relativePath 
+  : pathStep ( SLASH pathStep )*
+  ;
+  
+unionPath
+  : relativePath (PIPE relativePath)*
+  ;
+
+pathStep
+  : ( axisSpecifier? NAME | DOT_STEP ) predicate*
+  ;
+
+axisSpecifier
+  : XPATH_AXES XPATH_AXIS_SEP
+  | AT
+  ;
+
+predicate
+  : LBRACKET predicateExpr RBRACKET -> ^(NODE_PREDICATE predicateExpr)
+  ;
+
+predicateExpr
+  : predicateAndExpr (orOper predicateAndExpr)*
+  ;
+  
+predicateAndExpr
+  : predicateComparisonExpr (andOper predicateComparisonExpr)?
+  ;
+
+predicateComparisonExpr
+  : pathExpr (comparisonOper pathExpr)?
+  ;
+
+pathExpr
+  : unionPath
+  | filterExpr (SLASH relativePath)?
+  ;
+
+filterExpr
+  : primaryExpr predicate?
+  ;
+
+primaryExpr
+  : LPAREN predicateExpr RPAREN
+  | value
+  | function
+  ;
+  
+andOper
+  : AND | AND_ALT
+  ;
+  
+orOper
+  : OR | OR_ALT
+  ;
+  
+xorOper
+  : XOR | XOR_ALT
+  ;
 
 value
 	:	VARIABLE | STRING | INT | FLOAT
 	;
-
-function
-	:	FUNCTION expr? (COMMA expr)* RPAREN -> ^(FUNCTION expr (COMMA expr)*)
+	
+comparisonOper
+	:	EQUALITY | EQUALITY_ALT | INEQUALITY | INEQUALITY_ALT | LESS | LTE | GREATER | GTE
 	;
 	
-path
-	:	(v=PATH | v=AXIS) predicate* -> ^(NODE_PATH $v predicate*)
-	| AT path -> ^(AT path)
-	;
-
-predicate
-	:	LBRACKET predicate_expr RBRACKET -> ^(NODE_PREDICATE predicate_expr)
+addSubOper
+	:	ADD | SUB
 	;
 	
-predicate_expr
-  : INT
-	| predicate_value_expr predicate_oper predicate_value_expr
+multOper
+  : MULT | DIV | MOD 
 	;
-	
-predicate_value_expr
-	:	(value | function | path)
-	;
-	
-predicate_oper
-	:	EQUALITY | EQUALITY_ALT | INEQUALITY | INEQUALITY_ALT | LESS | LTE | GREATER | GTE | AND | AND_ALT | OR | OR_ALT 
-	;
-	
-oper
-	:	EQUALITY | EQUALITY_ALT | INEQUALITY | INEQUALITY_ALT | LESS | LTE | GREATER | GTE | AND | AND_ALT | OR | OR_ALT | XOR | XOR_ALT | ADD | SUB | MULT | SLASH | MOD 
-	;
-
 	
 /*------------------------------------------------------------------
  * LEXER RULES
@@ -105,15 +205,24 @@ STRING
   :  ('"' (~('\\'|'"') | ESC_SEQ)* '"')
   |  ('\'' (~('\\'|'\'') | ESC_SEQ)* '\'')
   ;
-    
+  
+FLOAT
+  : ('0'..'9')+ '.' ('0'..'9')*
+  | '.' ('0'..'9')+
+  ;
+  
+INT 
+  :	'0'..'9'+
+  ;
+  
 VARIABLE
 	:	'$' ('a'..'z'|'A'..'Z'|'0'..'9'|'_')*
   ;
 
 FUNCTION
-	:	('a'..'z'|'A'..'Z'|'0'..'9')+ '('
+	:	('a'..'z'|'A'..'Z'|'0'..'9'|'_')+ '('
   ;
-
+  
 AND_ALT
 	:	('A'|'a') ('N'|'n') ('D'|'d')
 	;
@@ -121,42 +230,32 @@ AND_ALT
 OR_ALT
 	:	('O'|'o') ('R'|'r')
 	;
-		
+  
 XOR_ALT
 	:	('X'|'x') ('O'|'o') ('R'|'r')
 	;
 
-AXIS 
-	:	('a'..'z') ('a'..'z'|'0'..'9'|'_'|'-'|'/')* '::' ('a'..'z'|'0'..'9'|'_'|'/')*
+XPATH_AXES
+  : 'ancestor'  | 'ancestor-or-self'  | 'attribute' |
+    'child'     | 'descendant'        | 'descendant-or-self' |
+    'following' | 'following-sibling' | 'namespace' |
+    'parent'    | 'preceding'         | 'preceding-sibling' |
+    'self'
   ;
-    
-PATH 
-  :	 ('..' ('/..')*)
-	|	('/' PATH_END)
-	|	(('../')+ PATH_END)
-	|	(PATH_END)
+  
+NAME
+  : ('a'..'z'|'_') ('a'..'z'|'0'..'9'|'_')*
   ;
-    
-FLOAT
-  : ('0'..'9')+ '.' ('0'..'9')*
-  | '.' ('0'..'9')+
-  ;
-
-INT 
-  :	'0'..'9'+
+  
+DOT_STEP 
+  : '.' | '..'
   ;
 
 WS
   : (' '|'\t'|'\r'|'\n') { $channel=HIDDEN; }
   ;
-
+  
 fragment
 ESC_SEQ
-  :   '\\' ('b'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\')
+  : '\\' ('b'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\')
   ;
-
-fragment
-PATH_END
-  : ('a'..'z') ('a'..'z'|'0'..'9'|'_'|'/../'|('/' 'a'..'z'))* ('/..')?
-  ;
-  

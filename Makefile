@@ -14,9 +14,7 @@ default: verbql verbql.so
 clean:
 	$(RM) verbql *.o *.so
 
-generate: generate-grammar
-
-generate-grammar: VerbQueryLanguage.g
+generate: VerbQueryLanguage.g VerbQueryLanguageTreeParser.g
 	java -classpath vendor/antlr-3.2.jar org.antlr.Tool VerbQueryLanguage.g VerbQueryLanguageTreeParser.g
 
 install: install-verbql.so
@@ -28,7 +26,7 @@ php_verbql.o: php_verbql.cpp
 	${CXX} ${CFLAGS} php_verbql.cpp
 	
 verbql: verbql.o ${OBJS}
-	${CXX} verbql.o ${OBJS} -lantlr3c -o verbql
+	${CXX} verbql.o ${OBJS} -lantlr3c -g -O0 -o verbql
 
 verbql.o: verbql.c
 	${C} ${CFLAGS} verbql.c
@@ -39,11 +37,11 @@ verbql.so: ${OBJS} php_verbql.o verbql_wrap.o
 verbql_wrap.o: verbql_wrap.cpp php_VerbQueryLanguage.h
 	${CXX} `php-config --includes` -fpic -c verbql_wrap.cpp
 	
-VerbQueryLanguageLexer.o: ${HEADERS}
+VerbQueryLanguageLexer.o: ${HEADERS} VerbQueryLanguageLexer.c
 	${C} ${CFLAGS} VerbQueryLanguageLexer.c
 	
-VerbQueryLanguageParser.o: ${HEADERS}
+VerbQueryLanguageParser.o: ${HEADERS} VerbQueryLanguageParser.c
 	${C} ${CFLAGS} VerbQueryLanguageParser.c
 	
-VerbQueryLanguageTreeParser.o: ${HEADERS}
+VerbQueryLanguageTreeParser.o: ${HEADERS} VerbQueryLanguageTreeParser.c
 	${C} ${CFLAGS} VerbQueryLanguageTreeParser.c

@@ -4,6 +4,10 @@
 
 extern int VerbQueryLanguagePath;
 
+char *resolveVariable(char *variable) {
+  return "";
+}
+
 int ANTLR3_CDECL main(int argc, char *argv[]) {
   VerbQueryLanguageParser_start_return langAST;
   
@@ -37,7 +41,7 @@ int ANTLR3_CDECL main(int argc, char *argv[]) {
 	if (psr->pParser->rec->state->errorCount == 0) {
 		nodes	= antlr3CommonTreeNodeStreamNewTree(langAST.tree, ANTLR3_SIZE_HINT);
 		printf("Nodes: %s\n", langAST.tree->toStringTree(langAST.tree)->chars);
-    treePsr	= VerbQueryLanguageTreeParserNew(nodes);
+    /*treePsr	= VerbQueryLanguageTreeParserNew(nodes);
 	  result = treePsr->start(treePsr);
 	  treePsr->free(treePsr);
 	  if (VerbQueryLanguagePath) {
@@ -45,7 +49,7 @@ int ANTLR3_CDECL main(int argc, char *argv[]) {
     } else {
       printf("Result: %s\n", result->chars);
     }
-	  nodes->free(nodes);
+	  nodes->free(nodes);*/
 	} else {
     printf("Unable to parse VerbQL Expression\n");
   }

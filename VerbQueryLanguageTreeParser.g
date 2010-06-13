@@ -34,13 +34,17 @@ options
     double dummy;
     return (sscanf(a->chars, "\%lf", &dummy) && sscanf(b->chars, "\%lf", &dummy));
   }
-
+  
   pANTLR3_STRING booleanResponse(int t, pANTLR3_BASE_TREE e) {
     if (t) {
       return e->strFactory->newStr(e->strFactory, "1");
     } else {
       return e->strFactory->newStr(e->strFactory, "0");
     }
+  }
+  
+  pANTLR3_STRING newStr(pANTLR3_BASE_TREE e, char *c) {
+    return e->strFactory->newStr(e->strFactory, c);
   }
   
   pANTLR3_STRING numberResponse(double t, pANTLR3_BASE_TREE e) {
@@ -64,54 +68,25 @@ returns [ pANTLR3_STRING result ]
     }
   ;
   
-root_path
-returns [ pANTLR3_STRING result ]
-  : NODE_PATH
-    {
-      $result = $NODE_PATH.text;
-    }
-    SQL?
-    {
-      printf("got a sql\n");
-    }
-    PATH
-    {
-      $result = $PATH.text;
-    }
-    predicate*
-    {
-      printf("got a pred\n");
-    }
-    EOF
-  ;
-  
-predicate
-  : NODE_PREDICATE
-  ;
-  
 expr
 returns [ pANTLR3_STRING result ]
   : oper
     {
       $result = $oper.result;
     }
-  | VARIABLE
+  | value
     {
-      $result = $VARIABLE.text;
-    }
-  | STRING
-    {
-      $result = $STRING.text->subString($STRING.text, 1, strlen($STRING.text->chars) - 1);
-    }
-  | FLOAT
-    {
-      $result = $FLOAT.text;
-    }
-  | INT
-    {
-      $result = $INT.text;
+      $result = $value.result;
     }
   ;
+  
+function
+returns [ pANTLR3_STRING result ]
+	:	^(FUNCTION expr (COMMA expr)*)
+	  {
+	    $result = $FUNCTION.text->subString($FUNCTION.text, 0, strlen($FUNCTION.text->chars) - 1);
+	  }
+	;
   
 oper
 returns [ pANTLR3_STRING result ]
@@ -170,5 +145,128 @@ returns [ pANTLR3_STRING result ]
 	|	^(e=MOD e1=expr e2=expr)
     {
       $result = numberResponse(asInt($e1.result) \% asInt($e2.result), $e);
+    }
+	;
+  
+predicate
+returns [ pANTLR3_STRING result ]
+  : ^(NODE_PREDICATE predicate_expr)
+    {
+      if (strlen($predicate_expr.result->chars)) {
+        $result = newStr($NODE_PREDICATE, "[");
+        $result->appendS($result, $predicate_expr.result);
+        $result->append8($result, "]");
+      } else {
+        $result = newStr($NODE_PREDICATE, "");
+      }
+    }
+  ;
+  
+predicate_expr
+returns [ pANTLR3_STRING result ]
+  : INT
+    {
+      return $INT.text;
+    }
+	| v1=predicate_value_expr predicate_oper v2=predicate_value_expr
+	  {
+	    if (!strlen($v1.result->chars)) {
+        $result = $v1.result;
+	    } else if (!strlen($v2.result->chars)) {
+        $result = $v2.result;
+	    } else {
+	      $result = $v1.result;
+	      $result->appendS($result, $predicate_oper.result);
+	      $result->appendS($result, $v2.result);
+	    }
+	  }
+  ;
+	
+predicate_value_expr
+returns [ pANTLR3_STRING result ]
+	:	^(NODE_VALUE value)
+	  {
+	    if (!strlen($value.result->chars)) {
+	      $result = $value.result;
+	    } else {
+	      $result = newStr($NODE_VALUE, "'");
+	      $result->appendS($result, $value.result);
+	      $result->append8($result, "'");
+	    }
+	  }
+	| function 
+	  {
+	    $result = $function.result;
+	  }
+	| PATH
+	  {
+	    $result = $PATH.text;
+	  }
+	;
+  
+predicate_oper
+returns [ pANTLR3_STRING result ]
+	:	(v=EQUALITY | v=EQUALITY_ALT)
+	  {
+	    return newStr($v, "=");
+	  }
+	|	(v=INEQUALITY | v=INEQUALITY_ALT)
+	  {
+	    return newStr($v, "!=");
+	  }
+	|	(v=AND | v=AND_ALT)
+	  {
+	    return newStr($v, " and ");
+	  }
+	|	(v=OR | v=OR_ALT)
+	  {
+	    return newStr($v, " or ");
+	  }
+	|	(v=LESS | v=LTE | v=GREATER | v=GTE)
+	  {
+	    return $v.text;
+	  }
+	;
+  
+root_path
+returns [ pANTLR3_STRING result ]
+  : ^(NODE_PATH
+    (
+      (SQL p1=PATH)
+        {
+          $result = newStr($NODE_PATH, "~");
+          $result->appendS($result, $p1.text);
+        } 
+      | 
+      p2=PATH
+        {
+          $result = $p2.text;
+        }
+    )
+    predicate*
+    {
+      $result->appendS($result, $predicate.result);
+    }
+    )
+  ;
+
+value
+returns [ pANTLR3_STRING result ]
+  : VARIABLE
+    {
+      $result = $VARIABLE.text->subString($VARIABLE.text, 1, strlen($VARIABLE.text->chars) - 1);
+      $result->set8($result, resolveVariable($result->chars));
+    }
+  | STRING
+    {
+      $result = $STRING.text->subString($STRING.text, 1, strlen($STRING.text->chars) - 1);
+    }
+  | FLOAT
+    {
+      $result = $FLOAT.text;
+    }
+  | INT
+    {
+      $result = $INT.text;
     }
 	;
