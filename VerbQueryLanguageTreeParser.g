@@ -148,21 +148,36 @@ returns [ pANTLR3_STRING result ]
     }
 	;
   
-predicate
+path
 returns [ pANTLR3_STRING result ]
-  : ^(NODE_PREDICATE predicate_expr)
+  : ^(SLASH p1=path p2=path)
     {
-      if (strlen($predicate_expr.result->chars)) {
-        $result = newStr($NODE_PREDICATE, "[");
-        $result->appendS($result, $predicate_expr.result);
+      $result = $p1.result;
+      $result->append8($result, "/");
+      $result->appendS($result, $p2.result);
+    }
+  | ^(NODE_PREDICATE predicate p3=path)
+    {
+      if (strlen($predicate.result->chars)) {
+        $result = $p3.result;
+        $result->append8($result, "[");
+        $result->appendS($result, $predicate.result);
         $result->append8($result, "]");
       } else {
         $result = newStr($NODE_PREDICATE, "");
       }
     }
+  | INT
+    {
+      $result = $INT.text;
+    }
+  | NAME
+    {
+      $result = $NAME.text;
+    }
   ;
-  
-predicate_expr
+
+predicate
 returns [ pANTLR3_STRING result ]
   : INT
     {
@@ -230,24 +245,15 @@ returns [ pANTLR3_STRING result ]
   
 root_path
 returns [ pANTLR3_STRING result ]
-  : ^(NODE_PATH
-    (
-      (SQL p1=PATH)
-        {
-          $result = newStr($NODE_PATH, "~");
-          $result->appendS($result, $p1.text);
-        } 
-      | 
-      p2=PATH
-        {
-          $result = $p2.text;
-        }
-    )
-    predicate*
+  : ^(NODE_SQL path)
     {
-      $result->appendS($result, $predicate.result);
+      $result = newStr($NODE_SQL, "~");
+      $result->appendS($result, $path.result);
     }
-    )
+  | ^(NODE_PATH path) 
+    {
+      $result = $path.result;
+    }
   ;
 
 value

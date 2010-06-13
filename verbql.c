@@ -41,15 +41,15 @@ int ANTLR3_CDECL main(int argc, char *argv[]) {
 	if (psr->pParser->rec->state->errorCount == 0) {
 		nodes	= antlr3CommonTreeNodeStreamNewTree(langAST.tree, ANTLR3_SIZE_HINT);
 		printf("Nodes: %s\n", langAST.tree->toStringTree(langAST.tree)->chars);
-    /*treePsr	= VerbQueryLanguageTreeParserNew(nodes);
+    treePsr	= VerbQueryLanguageTreeParserNew(nodes);
 	  result = treePsr->start(treePsr);
-	  treePsr->free(treePsr);
 	  if (VerbQueryLanguagePath) {
       printf("Path: %s\n", result->chars);
     } else {
       printf("Result: %s\n", result->chars);
     }
-	  nodes->free(nodes);*/
+	  treePsr->free(treePsr);
+	  nodes->free(nodes);
 	} else {
     printf("Unable to parse VerbQL Expression\n");
   }

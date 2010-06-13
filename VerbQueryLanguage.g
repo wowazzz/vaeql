@@ -5,12 +5,10 @@ options {
 }
 
 tokens {
-  NODE_ARGUMENTS ;
   NODE_FUNCTION ;
 	NODE_PATH ;
 	NODE_PREDICATE ;
 	NODE_SQL ;
-	NODE_VALUE ;
 
 	DIV = '//' ;
 	SLASH = '/' ;
@@ -100,12 +98,8 @@ valueExpr
 	;
 	
 function
-	: FUNCTION expressionList? RPAREN -> ^(NODE_FUNCTION FUNCTION expressionList?)
+	: FUNCTION expr ( COMMA expr )* RPAREN -> ^(NODE_FUNCTION FUNCTION expr+)
 	;
-	
-expressionList
-  : expr ( COMMA expr )* -> ^(NODE_ARGUMENTS expr+)
-  ;	
 
 path 
   : unionPath -> ^(NODE_PATH unionPath)
@@ -114,23 +108,27 @@ path
   ;
     
 absolutePath 
-  : SLASH unionPath?
+  : SLASH^ unionPath?
   ;
   
 idPath
-	: INT SLASH relativePath
+	: INT SLASH^ relativePath
 	;
   
 relativePath 
-  : pathStep ( SLASH pathStep )*
+  : pathStep (SLASH^ pathStepInternal)*
   ;
   
 unionPath
-  : relativePath (PIPE relativePath)*
+  : relativePath (PIPE^ relativePath)*
   ;
 
 pathStep
-  : ( axisSpecifier? NAME | DOT_STEP ) predicate*
+  : ( axisSpecifier? NAME | DOT_STEP ) predicate^*
+  ;
+
+pathStepInternal
+  : ( axisSpecifier? NAME | INT | DOT_STEP ) predicate^*
   ;
 
 axisSpecifier
