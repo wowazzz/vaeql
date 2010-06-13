@@ -6,6 +6,7 @@ options {
 
 tokens {
   NODE_ABSOLUTE ;
+  NODE_IF ;
   NODE_PARENEXPR ;
 	NODE_PATH ;
 	NODE_PREDICATE ;
@@ -62,12 +63,7 @@ sqlQuery
 	;
 	
 expr
-  : notExpr
-	| orExpr
-	;
-	
-notExpr
-	:	NOT expr -> ^(NOT expr) 
+  : orExpr
 	;
 	
 orExpr
@@ -91,8 +87,17 @@ addSubExpr
   ;
 
 multExpr
-  : valueExpr (multOper^ valueExpr)*
+  : ifExpr (multOper^ ifExpr)*
   ;
+
+ifExpr
+	: e1=notExpr (IFTRUE^ notExpr IFFALSE! notExpr)?
+	;
+	
+notExpr
+	: NOT valueExpr -> ^(NOT valueExpr) 
+	| valueExpr
+	;
 
 valueExpr
 	: (LPAREN expr RPAREN) -> ^(expr)

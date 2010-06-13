@@ -102,7 +102,11 @@ returns [ pANTLR3_STRING result ]
   
 oper
 returns [ pANTLR3_STRING result ]
-	:	^((e=EQUALITY | e=EQUALITY_ALT) e1=expr e2=expr)
+	:	^(e=IFTRUE e1=expr e2=expr e3=expr)
+    {
+      $result = (asBoolean($e1.result) ? $e2.result : $e3.result);
+    }
+	|	^((e=EQUALITY | e=EQUALITY_ALT) e1=expr e2=expr)
     {
       $result = booleanResponse((bothNumbers($e1.result, $e2.result) ? asNumber($e1.result) == asNumber($e2.result) : !strcmp($e1.result->chars, $e2.result->chars)), $e);
     }
@@ -157,6 +161,10 @@ returns [ pANTLR3_STRING result ]
 	|	^(e=MOD e1=expr e2=expr)
     {
       $result = numberResponse(asInt($e1.result) \% asInt($e2.result), $e);
+    }
+  | ^(e=NOT e1=expr)
+    {
+      $result = numberResponse(!asInt($e1.result), $e);
     }
 	;
   
