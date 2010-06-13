@@ -5,10 +5,12 @@ options {
 }
 
 tokens {
-  NODE_FUNCTION ;
+  NODE_ABSOLUTE ;
+  NODE_PARENEXPR ;
 	NODE_PATH ;
 	NODE_PREDICATE ;
 	NODE_SQL ;
+	NODE_VALUE ;
 
 	DIV = '//' ;
 	SLASH = '/' ;
@@ -94,12 +96,17 @@ multExpr
 
 valueExpr
 	: (LPAREN expr RPAREN) -> ^(expr)
-	|	(value | function | path)
+	|	(path | value | function)
 	;
 	
 function
-	: FUNCTION expr ( COMMA expr )* RPAREN -> ^(NODE_FUNCTION FUNCTION expr+)
+  : functionNoArgs
+	| FUNCTION expr ( COMMA expr )* RPAREN -> ^(FUNCTION expr+)
 	;
+	
+functionNoArgs
+  : FUNCTION RPAREN -> ^(FUNCTION)
+  ;
 
 path 
   : unionPath -> ^(NODE_PATH unionPath)
@@ -108,11 +115,12 @@ path
   ;
     
 absolutePath 
-  : SLASH^ unionPath?
+  : AT SLASH unionPath? -> ^(AT ^(NODE_ABSOLUTE unionPath))
+  | SLASH unionPath? -> ^(NODE_ABSOLUTE unionPath)
   ;
-  
+	
 idPath
-	: INT SLASH^ relativePath
+	: AT^? (INT | variable | functionNoArgs) SLASH^ relativePath
 	;
   
 relativePath 
@@ -124,16 +132,19 @@ unionPath
   ;
 
 pathStep
-  : ( axisSpecifier? NAME | DOT_STEP ) predicate^*
+  : ( axisSpecifier^? NAME | DOT_STEP ) predicate^*
   ;
 
 pathStepInternal
-  : ( axisSpecifier? NAME | INT | DOT_STEP ) predicate^*
+  : INT
+  | variable
+  | function
+  | pathStep
   ;
 
 axisSpecifier
-  : XPATH_AXES XPATH_AXIS_SEP
-  | AT
+  : XPATH_AXES XPATH_AXIS_SEP^
+  | AT^
   ;
 
 predicate
@@ -141,20 +152,20 @@ predicate
   ;
 
 predicateExpr
-  : predicateAndExpr (orOper predicateAndExpr)*
+  : predicateAndExpr (orOper^ predicateAndExpr)*
   ;
   
 predicateAndExpr
-  : predicateComparisonExpr (andOper predicateComparisonExpr)?
+  : predicateComparisonExpr (andOper^ predicateComparisonExpr)?
   ;
 
 predicateComparisonExpr
-  : pathExpr (comparisonOper pathExpr)?
+  : predicatePathExpr (comparisonOper^ predicatePathExpr)?
   ;
 
-pathExpr
+predicatePathExpr
   : unionPath
-  | filterExpr (SLASH relativePath)?
+  | filterExpr (SLASH^ relativePath)?
   ;
 
 filterExpr
@@ -162,8 +173,8 @@ filterExpr
   ;
 
 primaryExpr
-  : LPAREN predicateExpr RPAREN
-  | value
+  : LPAREN predicateExpr RPAREN -> ^(NODE_PARENEXPR predicateExpr)
+  | value 
   | function
   ;
   
@@ -180,8 +191,15 @@ xorOper
   ;
 
 value
-	:	VARIABLE | STRING | INT | FLOAT
+	:	variable
+	| STRING -> ^(NODE_VALUE STRING)
+	| INT -> ^(NODE_VALUE INT)
+	| FLOAT -> ^(NODE_VALUE FLOAT)
 	;
+	
+variable
+  : VARIABLE -> ^(NODE_VALUE VARIABLE)
+  ;
 	
 comparisonOper
 	:	EQUALITY | EQUALITY_ALT | INEQUALITY | INEQUALITY_ALT | LESS | LTE | GREATER | GTE

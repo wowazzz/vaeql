@@ -4,8 +4,16 @@
 
 extern int VerbQueryLanguagePath;
 
+char *resolveFunction(char *variable, char **args) {
+  return "125";
+}
+
+char *resolvePath(char *path) {
+  return "124";
+}
+
 char *resolveVariable(char *variable) {
-  return "";
+  return "123";
 }
 
 int ANTLR3_CDECL main(int argc, char *argv[]) {

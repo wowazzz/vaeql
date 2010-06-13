@@ -56,19 +56,19 @@ options
 
 start
 returns [ pANTLR3_STRING result ]
-  : root_path EOF
+  : rootPath EOF
     {
       VerbQueryLanguagePath = 1;
-      $result = $root_path.result;
+      $result = $rootPath.result;
     }
-  | expr EOF
+  | rootExpr EOF
     {
       VerbQueryLanguagePath = 0;
-      $result = $expr.result;
+      $result = $rootExpr.result;
     }
   ;
   
-expr
+rootExpr
 returns [ pANTLR3_STRING result ]
   : oper
     {
@@ -80,9 +80,21 @@ returns [ pANTLR3_STRING result ]
     }
   ;
   
+expr
+returns [ pANTLR3_STRING result ]
+  : rootExpr
+    {
+      $result = $rootExpr.result;
+    }
+	| pathToEval
+	  {
+	    $result = $pathToEval.result;
+	  }
+	;
+  
 function
 returns [ pANTLR3_STRING result ]
-	:	^(FUNCTION expr (COMMA expr)*)
+	:	^(FUNCTION expr*)
 	  {
 	    $result = $FUNCTION.text->subString($FUNCTION.text, 0, strlen($FUNCTION.text->chars) - 1);
 	  }
@@ -138,7 +150,7 @@ returns [ pANTLR3_STRING result ]
     {
       $result = numberResponse(asNumber($e1.result) * asNumber($e2.result), $e);
     }
-	|	^(e=SLASH e1=expr e2=expr)
+	|	^(e=DIV e1=expr e2=expr)
     {
       $result = numberResponse(asNumber($e1.result) / asNumber($e2.result), $e);
     }
@@ -148,13 +160,34 @@ returns [ pANTLR3_STRING result ]
     }
 	;
   
-path
+at
 returns [ pANTLR3_STRING result ]
-  : ^(SLASH p1=path p2=path)
+  : ^(AT p1=path)
     {
       $result = $p1.result;
-      $result->append8($result, "/");
+      $result->insert8($result, 0, "@");
+    }
+  | ^(XPATH_AXIS_SEP XPATH_AXES p2=path)
+    {
+      $result = $XPATH_AXES.text;
+      $result->appendS($result, $XPATH_AXIS_SEP.text);
       $result->appendS($result, $p2.result);
+    }
+  ;
+  
+path
+returns [ pANTLR3_STRING result ]
+  : slash
+    {
+      $result = $slash.result;
+    }
+  | at
+    {
+      $result = $at.result;
+    }
+  | piper
+    {
+      $result = $piper.result;
     }
   | ^(NODE_PREDICATE predicate p3=path)
     {
@@ -175,75 +208,201 @@ returns [ pANTLR3_STRING result ]
     {
       $result = $NAME.text;
     }
+  | variable
+    {
+      $result = $variable.result;
+    }
+  | function
+    {
+      $result = $function.result;
+    }
+  ;
+  
+piper  
+returns [ pANTLR3_STRING result ]
+  : ^(PIPE p1=path p2=path)
+    {
+      $result = $p1.result;
+      $result->append8($result, "|");
+      $result->appendS($result, $p2.result);
+    }
   ;
 
 predicate
 returns [ pANTLR3_STRING result ]
-  : INT
+  : ^(NODE_VALUE INT)
     {
       return $INT.text;
     }
-	| v1=predicate_value_expr predicate_oper v2=predicate_value_expr
-	  {
-	    if (!strlen($v1.result->chars)) {
-        $result = $v1.result;
-	    } else if (!strlen($v2.result->chars)) {
-        $result = $v2.result;
-	    } else {
-	      $result = $v1.result;
-	      $result->appendS($result, $predicate_oper.result);
-	      $result->appendS($result, $v2.result);
-	    }
-	  }
+  | predicateOper
+    {
+      return $predicateOper.result;
+    }
   ;
-	
-predicate_value_expr
+  
+predicateExpr
 returns [ pANTLR3_STRING result ]
-	:	^(NODE_VALUE value)
+  : predicatePath
+    {
+      return $predicatePath.result;
+    }
+  | value
 	  {
-	    if (!strlen($value.result->chars)) {
-	      $result = $value.result;
-	    } else {
-	      $result = newStr($NODE_VALUE, "'");
-	      $result->appendS($result, $value.result);
+	    $result = $value.result;
+	    if (strlen($value.result->chars)) {
+	      $result->insert8($result, 0, "'");
 	      $result->append8($result, "'");
 	    }
+	  }
+  | predicateOper
+    {
+      return $predicateOper.result;
+    }
+  ;
+  
+predicateOper
+returns [ pANTLR3_STRING result ]
+  : predicateEqualityOper
+    {
+      return $predicateEqualityOper.result;
+    }
+  | predicateInequalityOper
+    {
+      return $predicateInequalityOper.result;
+    }
+  | predicateAndOper
+    {
+      return $predicateAndOper.result;
+    }
+  | predicateOrOper
+    {
+      return $predicateOrOper.result;
+    }
+  | predicateComparisonOper
+    {
+      return $predicateComparisonOper.result;
+    }
+  ;
+  
+predicateEqualityOper
+returns [ pANTLR3_STRING result ]
+  : ^(equalityOper p1=predicateExpr p2=predicateExpr)
+	  {
+	    $result = $p1.result;
+      $result->append8($result, "=");
+      $result->appendS($result, $p2.result);
+	  }
+	;
+	
+predicateInequalityOper
+returns [ pANTLR3_STRING result ]
+  : ^(inequalityOper p1=predicateExpr p2=predicateExpr)
+	  {
+	    $result = $p1.result;
+      $result->append8($result, "!=");
+      $result->appendS($result, $p2.result);
+	  }
+	;
+	
+predicateAndOper
+returns [ pANTLR3_STRING result ]
+  : ^(andOper p1=predicateExpr p2=predicateExpr)
+	  {
+	    $result = $p1.result;
+      $result->append8($result, " and ");
+      $result->appendS($result, $p2.result);
+	  }
+	;
+	
+predicateOrOper
+returns [ pANTLR3_STRING result ]
+  : ^(orOper p1=predicateExpr p2=predicateExpr)
+	  {
+	    $result = $p1.result;
+      $result->append8($result, " or ");
+      $result->appendS($result, $p2.result);
+	  }
+	;
+	
+predicateComparisonOper
+returns [ pANTLR3_STRING result ]
+  : ^(comparisonOper p1=predicateExpr p2=predicateExpr)
+	  {
+	    $result = $p1.result;
+      $result->appendS($result, $comparisonOper.text);
+      $result->appendS($result, $p2.result);
+	  }
+	;
+
+predicatePath
+returns [ pANTLR3_STRING result ]
+  : slash
+    {
+      $result = $slash.result;
+    }
+  | NAME
+    {
+      $result = $NAME.text;
+    }
+  ;
+  
+slash  
+returns [ pANTLR3_STRING result ]
+  : ^(NODE_ABSOLUTE p3=path)
+    {
+      $result = $p3.result;
+      $result->insert8($result, 0, "/");
+    }
+  | ^(SLASH p1=path p2=path)
+    {
+      $result = $p1.result;
+      $result->append8($result, "/");
+      $result->appendS($result, $p2.result);
+    }
+  ;
+	
+value
+returns [ pANTLR3_STRING result ]
+  : ^(NODE_VALUE STRING)
+    {
+      $result = $STRING.text->subString($STRING.text, 1, strlen($STRING.text->chars) - 1);
+    }
+  | ^(NODE_VALUE FLOAT)
+    {
+      $result = $FLOAT.text;
+    }
+  | ^(NODE_VALUE INT)
+    {
+      $result = $INT.text;
+    }
+	| variable
+	  {
+	    $result = $variable.result;
 	  }
 	| function 
 	  {
 	    $result = $function.result;
 	  }
-	| PATH
-	  {
-	    $result = $PATH.text;
-	  }
 	;
-  
-predicate_oper
+	
+pathToEval
 returns [ pANTLR3_STRING result ]
-	:	(v=EQUALITY | v=EQUALITY_ALT)
-	  {
-	    return newStr($v, "=");
-	  }
-	|	(v=INEQUALITY | v=INEQUALITY_ALT)
-	  {
-	    return newStr($v, "!=");
-	  }
-	|	(v=AND | v=AND_ALT)
-	  {
-	    return newStr($v, " and ");
-	  }
-	|	(v=OR | v=OR_ALT)
-	  {
-	    return newStr($v, " or ");
-	  }
-	|	(v=LESS | v=LTE | v=GREATER | v=GTE)
-	  {
-	    return $v.text;
-	  }
-	;
-  
-root_path
+  : ^(NODE_PATH path)
+    {
+      $result = newStr($NODE_PATH, resolvePath($path.result->chars));
+    }
+  ;
+	
+variable
+returns [ pANTLR3_STRING result ]
+  : ^(NODE_VALUE VARIABLE)
+    {
+      $result = $VARIABLE.text->subString($VARIABLE.text, 1, strlen($VARIABLE.text->chars) - 1);
+      $result->set8($result, resolveVariable($result->chars));
+    }
+  ;
+    
+rootPath
 returns [ pANTLR3_STRING result ]
   : ^(NODE_SQL path)
     {
@@ -256,23 +415,22 @@ returns [ pANTLR3_STRING result ]
     }
   ;
 
-value
-returns [ pANTLR3_STRING result ]
-  : VARIABLE
-    {
-      $result = $VARIABLE.text->subString($VARIABLE.text, 1, strlen($VARIABLE.text->chars) - 1);
-      $result->set8($result, resolveVariable($result->chars));
-    }
-  | STRING
-    {
-      $result = $STRING.text->subString($STRING.text, 1, strlen($STRING.text->chars) - 1);
-    }
-  | FLOAT
-    {
-      $result = $FLOAT.text;
-    }
-  | INT
-    {
-      $result = $INT.text;
-    }
+andOper
+  : AND | AND_ALT
+  ;
+  
+orOper
+  : OR | OR_ALT
+  ;
+	
+equalityOper
+	:	EQUALITY | EQUALITY_ALT
+	;
+	
+inequalityOper
+	:	INEQUALITY | INEQUALITY_ALT
+	;
+
+comparisonOper
+  : LESS | LTE | GREATER | GTE
 	;
