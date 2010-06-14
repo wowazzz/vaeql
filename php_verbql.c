@@ -73,12 +73,9 @@ ZEND_NAMED_FUNCTION(_verbql_query) {
 		//printf("Nodes: %s\n", langAST.tree->toStringTree(langAST.tree)->chars);
     treePsr	= VerbQueryLanguageTreeParserNew(nodes);
 	  result = treePsr->start(treePsr);
-	  if (result.isPath) {
-      //printf("Path: %s\n", result.result->chars);
-    } else {
-      //printf("Result: %s\n", result.result->chars);
-    }
-    ZVAL_STRING(return_value, result.result->chars, 1);
+    array_init(return_value);
+    add_next_index_bool(return_value, result.isPath);
+    add_next_index_string(return_value, result.result->chars, 1); 
 	  treePsr->free(treePsr);
 	  nodes->free(nodes);
 	} else {
@@ -88,7 +85,6 @@ ZEND_NAMED_FUNCTION(_verbql_query) {
 	psr->free(psr);
 	lxr->free(lxr);
 	istream->close(istream);
-  return;
 }
 
 /* PHP Function Table */
