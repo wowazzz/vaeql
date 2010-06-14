@@ -10,11 +10,14 @@ options
 @header
 {
 #include "verbql.h"
+#define FUNCTION_ARG_LIST_SIZE 10
 }
 
 @members
 {
-  int VerbQueryLanguagePath = 0;
+
+  char *functionArgList[FUNCTION_ARG_LIST_SIZE];
+  char functionArgCount;
 
   int asBoolean(pANTLR3_STRING a) {
     double dummy;
@@ -106,11 +109,27 @@ returns [ pANTLR3_STRING result ]
 	
 function
 returns [ pANTLR3_STRING result ]
-	:	^(FUNCTION expr*)
+	:	^(NODE_FUNCTION FUNCTION 
+	    {
+	      functionArgCount = 0;
+        functionArgList[0] = NULL;
+	    }
+	    expressionList?
+	  )
 	  {
-	    $result = $FUNCTION.text->subString($FUNCTION.text, 0, strlen($FUNCTION.text->chars) - 1);
+	    $result = newStr($FUNCTION, resolveFunction($FUNCTION.text->subString($FUNCTION.text, 0, strlen($FUNCTION.text->chars) - 1)->chars, functionArgList));
 	  }
 	;
+	
+expressionList
+  : ^(COMMA expressionList expressionList) 
+  | evaledExpr
+    {
+      functionArgList[functionArgCount] = $evaledExpr.result->chars;
+      functionArgCount++;
+      functionArgList[functionArgCount] = NULL;
+    }
+  ;
   
 oper
 returns [ pANTLR3_STRING result, int isPath ]

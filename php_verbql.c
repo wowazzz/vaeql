@@ -11,12 +11,39 @@
 #include "verbql.h"
 #include "php_verbql.h"
 
-char *resolveFunction(char *variable, char **args) {
-  return "125";
+char *resolveFunction(char *function, char **args) {
+  zval func, retval, function_param, arguments_param, *params[2];
+  char *result, **arg;
+  INIT_ZVAL(function_param);
+  params[0] = &function_param;
+  params[1] = &arguments_param;
+  ZVAL_STRING(params[0], function, 0);
+  ZVAL_STRING(&func, "_verbql_function", 0);
+  array_init(&arguments_param);
+  for (arg = args; *arg; arg++) {
+    add_next_index_string(&arguments_param, *arg, 1);
+  } 
+  if (call_user_function(EG(function_table), NULL, &func, &retval, 2, params TSRMLS_CC) == FAILURE) {
+    return "";
+  }
+  convert_to_string(&retval);
+  result = (char *)Z_STRVAL_P(&retval);
+  return result;
 }
 
 char *resolvePath(char *path) {
-  return "124";
+  zval func, retval, param, *params[1];
+  char *result;
+  INIT_ZVAL(param);
+  params[0] = &param;
+  ZVAL_STRING(params[0], path, 0);
+  ZVAL_STRING(&func, "_verbql_path", 0);
+  if (call_user_function(EG(function_table), NULL, &func, &retval, 1, params TSRMLS_CC) == FAILURE) {
+    return "";
+  }
+  convert_to_string(&retval);
+  result = (char *)Z_STRVAL_P(&retval);
+  return result;
 }
 
 char *resolveVariable(char *variable) {

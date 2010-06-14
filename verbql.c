@@ -2,8 +2,9 @@
 #include "VerbQueryLanguageParser.h"
 #include "VerbQueryLanguageTreeParser.h"
 
-char *resolveFunction(char *variable, char **args) {
-  return "125";
+char *resolveFunction(char *function, char **args) {
+  char **arg;
+  return function;
 }
 
 char *resolvePath(char *path) {

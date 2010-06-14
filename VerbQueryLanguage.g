@@ -6,6 +6,7 @@ options {
 
 tokens {
   NODE_ABSOLUTE ;
+  NODE_FUNCTION ;
   NODE_IF ;
   NODE_PARENEXPR ;
 	NODE_PATH ;
@@ -100,12 +101,15 @@ valueExpr
 	;
 	
 function
-  : functionNoArgs
-	| FUNCTION expr ( COMMA expr )* RPAREN -> ^(FUNCTION expr+)
+	: FUNCTION expressionList RPAREN -> ^(NODE_FUNCTION FUNCTION expressionList)
 	;
 	
+expressionList
+  : expr? ( COMMA^ expr )*
+  ;
+	
 functionNoArgs
-  : FUNCTION RPAREN -> ^(FUNCTION)
+  : FUNCTION RPAREN -> ^(NODE_FUNCTION FUNCTION)
   ;
 
 path 
