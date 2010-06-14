@@ -184,7 +184,7 @@ returns [ pANTLR3_STRING result, int isPath ]
       $isPath = 0;
       $result = booleanResponse(asBoolean($e1.result) ^ asBoolean($e2.result), $e);
     }
-	|	^(e=ADD e1=evaledExpr e2=evaledExpr)
+	|	^(e=ADD_TOK e1=evaledExpr e2=evaledExpr)
     {
       $isPath = 0;
       $result = numberResponse(asNumber($e1.result) + asNumber($e2.result), $e);

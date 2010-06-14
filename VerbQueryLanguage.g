@@ -32,7 +32,7 @@ tokens {
 	OR = '||' ;
 	XOR = '^' ;
 	NOT = '!' ;
-	ADD = '+' ;
+	ADD_TOK = '+' ;
 	SUB = '-' ;
 	MULT = '*' ;
 	MOD = '%';
@@ -211,7 +211,7 @@ comparisonOper
 	;
 	
 addSubOper
-	:	ADD | SUB
+	:	ADD_TOK | SUB
 	;
 	
 multOper
