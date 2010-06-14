@@ -2,11 +2,7 @@
 #include "VerbQueryLanguageParser.h"
 #include "VerbQueryLanguageTreeParser.h"
 
-#include "zend.h"
-#include "zend_API.h"
-#include "zend_exceptions.h"
 #include "php.h"
-#include "ext/standard/php_string.h"
 
 #include "verbql.h"
 #include "php_verbql.h"
