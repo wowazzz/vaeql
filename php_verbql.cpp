@@ -14,7 +14,8 @@ VerbQueryLanguage::~VerbQueryLanguage() {
 }
 
 char *VerbQueryLanguage::query(char *input) {
-  char *result;
+  VerbQueryLanguageTreeParser_start_return result;
+  char *final_result;
 	if (istream) {
 	  istream->close(istream);
   }
@@ -39,18 +40,19 @@ char *VerbQueryLanguage::query(char *input) {
   }
   langAST = psr->start(psr);
 	if (psr->pParser->rec->state->errorCount > 0) {
-    result = (char *)"_PARSE_ERROR";
+    final_result = (char *)"_PARSE_ERROR";
 	} else {
 		nodes	= antlr3CommonTreeNodeStreamNewTree(langAST.tree, ANTLR3_SIZE_HINT);
 		printf("Nodes: %s\n", langAST.tree->toStringTree(langAST.tree)->chars);
     treePsr	= VerbQueryLanguageTreeParserNew(nodes);
-	  result = (char *)treePsr->start(treePsr)->chars;
+    result = treePsr->start(treePsr);
+	  final_result = (char *)result.result->chars;
 	  treePsr->free(treePsr);
 	}
 	nodes->free(nodes);
 	tstream->free(tstream);
 	lxr->free(lxr);
-  return result;
+  return final_result;
 }
 
 char *VerbQueryLanguage::resolvePath(char *input) {

@@ -55,43 +55,61 @@ options
 }
 
 start
-returns [ pANTLR3_STRING result ]
+returns [ pANTLR3_STRING result, int isPath ]
   : rootPath EOF
     {
-      VerbQueryLanguagePath = 1;
+      $isPath = $rootPath.isPath;
       $result = $rootPath.result;
     }
   | rootExpr EOF
     {
-      VerbQueryLanguagePath = 0;
+      $isPath = $rootExpr.isPath;
       $result = $rootExpr.result;
     }
   ;
   
 rootExpr
-returns [ pANTLR3_STRING result ]
+returns [ pANTLR3_STRING result, int isPath ]
   : oper
     {
+      $isPath = $oper.isPath;
       $result = $oper.result;
     }
   | value
     {
+      $isPath = 0;
       $result = $value.result;
     }
   ;
   
 expr
-returns [ pANTLR3_STRING result ]
+returns [ pANTLR3_STRING result, int isPath ]
   : rootExpr
     {
+      $isPath = $rootExpr.isPath;
       $result = $rootExpr.result;
     }
 	| pathToEval
 	  {
+	    $isPath = 0;
 	    $result = $pathToEval.result;
 	  }
 	;
-  
+	
+ifExpr
+returns [ pANTLR3_STRING result, int isPath ]
+  : rootExpr
+    {
+      $isPath = $rootExpr.isPath;
+      $result = $rootExpr.result;
+    }
+	| rootPath
+	  {
+	    $isPath = 1;
+	    $result = $rootPath.result;
+	  }
+	;
+	
 function
 returns [ pANTLR3_STRING result ]
 	:	^(FUNCTION expr*)
@@ -101,69 +119,86 @@ returns [ pANTLR3_STRING result ]
 	;
   
 oper
-returns [ pANTLR3_STRING result ]
-	:	^(e=IFTRUE e1=expr e2=expr e3=expr)
+returns [ pANTLR3_STRING result, int isPath ]
+	:	^(e=IFTRUE e1=expr ie2=ifExpr ie3=ifExpr)
     {
-      $result = (asBoolean($e1.result) ? $e2.result : $e3.result);
+      int t = asBoolean($e1.result);
+      $isPath = (t ? $ie2.isPath : $ie3.isPath);
+      $result = (t ? $ie2.result : $ie3.result);
     }
 	|	^((e=EQUALITY | e=EQUALITY_ALT) e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = booleanResponse((bothNumbers($e1.result, $e2.result) ? asNumber($e1.result) == asNumber($e2.result) : !strcmp($e1.result->chars, $e2.result->chars)), $e);
     }
 	|	^((e=INEQUALITY | e=INEQUALITY_ALT) e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = booleanResponse((bothNumbers($e1.result, $e2.result) ? asNumber($e1.result) != asNumber($e2.result) : strcmp($e1.result->chars, $e2.result->chars)), $e);
     }
 	|	^(e=LESS e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = booleanResponse((bothNumbers($e1.result, $e2.result) ? asNumber($e1.result) < asNumber($e2.result) : strcmp($e1.result->chars, $e2.result->chars) < 0), $e);
     }
 	|	^(e=LTE e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = booleanResponse((bothNumbers($e1.result, $e2.result) ? asNumber($e1.result) <= asNumber($e2.result) : strcmp($e1.result->chars, $e2.result->chars) <= 0), $e);
     }
 	|	^(e=GREATER e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = booleanResponse((bothNumbers($e1.result, $e2.result) ? asNumber($e1.result) > asNumber($e2.result) : strcmp($e1.result->chars, $e2.result->chars) > 0), $e);
     }
 	|	^(e=GTE e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = booleanResponse((bothNumbers($e1.result, $e2.result) ? asNumber($e1.result) >= asNumber($e2.result) : strcmp($e1.result->chars, $e2.result->chars) >= 0), $e);
     }
 	|	^((e=AND | e=AND_ALT) e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = booleanResponse(asBoolean($e1.result) && asBoolean($e2.result), $e);
     }
 	|	^((e=OR | e=OR_ALT) e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = booleanResponse(asBoolean($e1.result) || asBoolean($e2.result), $e);
     }
 	|	^((e=XOR | e=XOR_ALT) e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = booleanResponse(asBoolean($e1.result) ^ asBoolean($e2.result), $e);
     }
 	|	^(e=ADD e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = numberResponse(asNumber($e1.result) + asNumber($e2.result), $e);
     }
 	|	^(e=SUB e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = numberResponse(asNumber($e1.result) - asNumber($e2.result), $e);
     }
 	|	^(e=MULT e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = numberResponse(asNumber($e1.result) * asNumber($e2.result), $e);
     }
 	|	^(e=DIV e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = numberResponse(asNumber($e1.result) / asNumber($e2.result), $e);
     }
 	|	^(e=MOD e1=expr e2=expr)
     {
+      $isPath = 0;
       $result = numberResponse(asInt($e1.result) \% asInt($e2.result), $e);
     }
   | ^(e=NOT e1=expr)
     {
+      $isPath = 0;
       $result = numberResponse(!asInt($e1.result), $e);
     }
 	;
@@ -411,14 +446,16 @@ returns [ pANTLR3_STRING result ]
   ;
     
 rootPath
-returns [ pANTLR3_STRING result ]
+returns [ pANTLR3_STRING result, int isPath ]
   : ^(NODE_SQL path)
     {
       $result = newStr($NODE_SQL, "~");
       $result->appendS($result, $path.result);
+      $isPath = 1;
     }
   | ^(NODE_PATH path) 
     {
+      $isPath = 1;
       $result = $path.result;
     }
   ;

@@ -26,7 +26,7 @@ int ANTLR3_CDECL main(int argc, char *argv[]) {
   pANTLR3_INPUT_STREAM istream;
   pANTLR3_COMMON_TOKEN_STREAM	tstream;
   pANTLR3_COMMON_TREE_NODE_STREAM	nodes;
-  pANTLR3_STRING result;
+  VerbQueryLanguageTreeParser_start_return result;
 
   istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)argv[1], (ANTLR3_UINT64)strlen(argv[1]), NULL);
 
@@ -51,10 +51,10 @@ int ANTLR3_CDECL main(int argc, char *argv[]) {
 		printf("Nodes: %s\n", langAST.tree->toStringTree(langAST.tree)->chars);
     treePsr	= VerbQueryLanguageTreeParserNew(nodes);
 	  result = treePsr->start(treePsr);
-	  if (VerbQueryLanguagePath) {
-      printf("Path: %s\n", result->chars);
+	  if (result.isPath) {
+      printf("Path: %s\n", result.result->chars);
     } else {
-      printf("Result: %s\n", result->chars);
+      printf("Result: %s\n", result.result->chars);
     }
 	  treePsr->free(treePsr);
 	  nodes->free(nodes);
