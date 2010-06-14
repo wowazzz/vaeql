@@ -5,6 +5,6 @@ yum install glibc-devel
 
 [all]:
 cd vendor/libantlr3c-3.2
-./configure --enable-64bit
+./configure --enable-64bit --enable-shared
 make
 make install
