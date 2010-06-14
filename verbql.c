@@ -2,8 +2,6 @@
 #include "VerbQueryLanguageParser.h"
 #include "VerbQueryLanguageTreeParser.h"
 
-extern int VerbQueryLanguagePath;
-
 char *resolveFunction(char *variable, char **args) {
   return "125";
 }

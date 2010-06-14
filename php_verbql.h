@@ -1,16 +1,21 @@
-class VerbQueryLanguage {
-  
-public:
-  VerbQueryLanguage();
-  ~VerbQueryLanguage();
-  char *query(char *input);
-  virtual char *resolvePath(char *input);
-  
-  pVerbQueryLanguageLexer	lxr;
-  pVerbQueryLanguageParser psr;
-  pVerbQueryLanguageTreeParser treePsr;
-  VerbQueryLanguageParser_start_return langAST;
-  pANTLR3_INPUT_STREAM istream;
-  pANTLR3_COMMON_TOKEN_STREAM	tstream;
-  pANTLR3_COMMON_TREE_NODE_STREAM	nodes;
-};
+#ifndef PHP_VERBQL_H
+#define PHP_VERBQL_H
+
+extern zend_module_entry VerbQueryLanguage_module_entry;
+#define phpext_VerbQueryLanguage_ptr &VerbQueryLanguage_module_entry;
+
+#define PHP_VERBQUERYLANGUAGE_API
+
+#ifdef ZTS
+#include "TSRM.h"
+#endif
+
+PHP_MINIT_FUNCTION(VerbQueryLanguage);
+PHP_MSHUTDOWN_FUNCTION(VerbQueryLanguage);
+PHP_RINIT_FUNCTION(VerbQueryLanguage);
+PHP_RSHUTDOWN_FUNCTION(VerbQueryLanguage);
+PHP_MINFO_FUNCTION(VerbQueryLanguage);
+
+ZEND_NAMED_FUNCTION(_verbql_query);
+
+#endif

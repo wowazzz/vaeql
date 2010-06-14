@@ -55,11 +55,6 @@ tokens {
  
 start
 	:	expr EOF -> ^(expr)
-	| sqlQuery EOF -> ^(sqlQuery)
-	;
-	
-sqlQuery
-	:	SQL pathStep -> ^(NODE_SQL pathStep)
 	;
 	
 expr
@@ -117,6 +112,7 @@ path
   : unionPath -> ^(NODE_PATH unionPath)
   | idPath -> ^(NODE_PATH idPath)
   | absolutePath -> ^(NODE_PATH absolutePath)
+	|	SQL pathStep -> ^(NODE_SQL pathStep)
   ;
     
 absolutePath 

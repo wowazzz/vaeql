@@ -1,5 +1,4 @@
 C = gcc
-CXX = g++
 CFLAGS = -g -O2 -fPIC -I/usr/local/include -I. -c
 LDFLAGS =  -L/usr/local/lib -g -o
 LIBS =  -lantlr3c
@@ -22,20 +21,17 @@ install: install-verbql.so
 install-verbql.so:
 	sudo cp verbql.so `php-config --extension-dir`
 
-php_verbql.o: php_verbql.cpp
-	${CXX} ${CFLAGS} php_verbql.cpp
+php_verbql.o: php_verbql.c
+	${C} `php-config --includes` ${CFLAGS} php_verbql.c
 	
 verbql: verbql.o ${OBJS}
-	${CXX} verbql.o ${OBJS} -lantlr3c -g -O0 -o verbql
+	${C} verbql.o ${OBJS} -lantlr3c -g -O0 -o verbql
 
 verbql.o: verbql.c
 	${C} ${CFLAGS} verbql.c
 	
-verbql.so: ${OBJS} php_verbql.o verbql_wrap.o
-	${CXX} -shared -fPIC -Wl,-undefined,dynamic_lookup php_verbql.o verbql_wrap.o ${OBJS} /usr/local/lib/libantlr3c.a -o verbql.so
-	
-verbql_wrap.o: verbql_wrap.cpp php_VerbQueryLanguage.h
-	${CXX} `php-config --includes` -fpic -c verbql_wrap.cpp
+verbql.so: ${OBJS} php_verbql.o
+	${C} -shared -fPIC -Wl,-undefined,dynamic_lookup php_verbql.o ${OBJS} /usr/local/lib/libantlr3c.a -o verbql.so
 	
 VerbQueryLanguageLexer.o: ${HEADERS} VerbQueryLanguageLexer.c
 	${C} ${CFLAGS} VerbQueryLanguageLexer.c
