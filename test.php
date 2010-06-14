@@ -2,26 +2,6 @@
 
 $fails = 0;
 
-function _verbql_function($function, $args) {
-  if (!function_exists($function)) return "[FUNCTION NOT FOUND]";
-  return call_user_func_array($function, $args);
-}
-
-function _verbql_path($path) {
-  global $_VERB;
-  return _verb_fetch($path, $_VERB['verbql_context']);
-}
-
-function _verbql_query($query, $context = null) {
-  global $_VERB;
-  $_VERB['verbql_context'] = $context;
-  return _verbql_query_internal($query);
-}
-
-function _verbql_variable($name) {
-  return $_REQUEST[$name];
-}
-
 function verbql_test($q, $a, $path = false) {
   global $passes, $fails;
   $r = _verbql_query($q);
