@@ -20,10 +20,21 @@ char *resolvePath(char *path) {
 }
 
 char *resolveVariable(char *variable) {
-  return "123";
+  zval func, retval, param, *params[1];
+  char *result;
+  INIT_ZVAL(param);
+  params[0] = &param;
+  ZVAL_STRING(params[0], variable, 0);
+  ZVAL_STRING(&func, "_verbql_variable", 0);
+  if (call_user_function(EG(function_table), NULL, &func, &retval, 1, params TSRMLS_CC) == FAILURE) {
+    return "";
+  }
+  convert_to_string(&retval);
+  result = (char *)Z_STRVAL_P(&retval);
+  return result;
 }
 
-ZEND_NAMED_FUNCTION(_verbql_query) {
+ZEND_NAMED_FUNCTION(_verbql_query_internal) {
   
   /* PHP */
   zval **args[1];
@@ -54,18 +65,18 @@ ZEND_NAMED_FUNCTION(_verbql_query) {
   istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)query, (ANTLR3_UINT64)strlen(query), NULL);
   lxr	= VerbQueryLanguageLexerNew(istream);
   if (lxr == NULL) {
-		fprintf(stderr, "Unable to create the lexer due to malloc() failure1\n");
-		exit(ANTLR3_ERR_NOMEM);
+		RETURN_NULL();
+    return;
   }
   tstream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lxr));
   if (tstream == NULL) {
-		fprintf(stderr, "Out of memory trying to allocate token stream\n");
-		exit(ANTLR3_ERR_NOMEM);
+		RETURN_NULL();
+    return;
   }
   psr	= VerbQueryLanguageParserNew(tstream);
   if (psr == NULL) {
-		fprintf(stderr, "Out of memory trying to allocate parser\n");
-		exit(ANTLR3_ERR_NOMEM);
+		RETURN_NULL();
+    return;
   }
   langAST = psr->start(psr);
 	if (psr->pParser->rec->state->errorCount == 0) {
@@ -79,7 +90,7 @@ ZEND_NAMED_FUNCTION(_verbql_query) {
 	  treePsr->free(treePsr);
 	  nodes->free(nodes);
 	} else {
-    zend_throw_exception(zend_exception_get_default(), "Unable to Parse VerbQL Query.", 0);  
+    RETURN_NULL();
   }
 	tstream->free(tstream);
 	psr->free(psr);
@@ -89,7 +100,7 @@ ZEND_NAMED_FUNCTION(_verbql_query) {
 
 /* PHP Function Table */
 static zend_function_entry VerbQueryLanguage_functions[] = {
-  ZEND_NAMED_FE(_verbql_query, _verbql_query, NULL)
+  ZEND_NAMED_FE(_verbql_query_internal, _verbql_query_internal, NULL)
   {NULL, NULL, NULL}
 };
 

@@ -426,7 +426,7 @@ variable
 returns [ pANTLR3_STRING result ]
   : ^(NODE_VALUE VARIABLE)
     {
-      $result = $VARIABLE.text->subString($VARIABLE.text, 1, strlen($VARIABLE.text->chars) - 1);
+      $result = $VARIABLE.text->subString($VARIABLE.text, 1, strlen($VARIABLE.text->chars));
       $result->set8($result, resolveVariable($result->chars));
     }
   ;

@@ -16,6 +16,6 @@ PHP_RINIT_FUNCTION(VerbQueryLanguage);
 PHP_RSHUTDOWN_FUNCTION(VerbQueryLanguage);
 PHP_MINFO_FUNCTION(VerbQueryLanguage);
 
-ZEND_NAMED_FUNCTION(_verbql_query);
+ZEND_NAMED_FUNCTION(_verbql_query_internal);
 
 #endif
