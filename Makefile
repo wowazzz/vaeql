@@ -31,7 +31,7 @@ verbql.o: verbql.c
 	${C} ${CFLAGS} verbql.c
 	
 verbql.so: ${OBJS} php_verbql.o
-	${C} -shared -fPIC -Wl,-undefined,dynamic_lookup php_verbql.o ${OBJS} /usr/local/lib/libantlr3c.a -o verbql.so
+	${C} -shared -fPIC -Wl,-undefined,dynamic_lookup php_verbql.o ${OBJS} -lantlr3c -o verbql.so
 	
 VerbQueryLanguageLexer.o: ${HEADERS} VerbQueryLanguageLexer.c
 	${C} ${CFLAGS} VerbQueryLanguageLexer.c
