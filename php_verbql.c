@@ -87,33 +87,25 @@ ZEND_NAMED_FUNCTION(_verbql_query_internal) {
   /* Lex and Parse */
   istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)query, (ANTLR3_UINT64)strlen(query), NULL);
   lxr	= VerbQueryLanguageLexerNew(istream);
-  if (lxr == NULL) {
-		RETURN_NULL();
-    return;
-  }
   tstream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lxr));
-  if (tstream == NULL) {
-		RETURN_NULL();
-    return;
-  }
   psr	= VerbQueryLanguageParserNew(tstream);
-  if (psr == NULL) {
-		RETURN_NULL();
-    return;
-  }
   langAST = psr->start(psr);
 	if (psr->pParser->rec->state->errorCount == 0) {
 		nodes	= antlr3CommonTreeNodeStreamNewTree(langAST.tree, ANTLR3_SIZE_HINT);
 		//printf("Nodes: %s\n", langAST.tree->toStringTree(langAST.tree)->chars);
     treePsr	= VerbQueryLanguageTreeParserNew(nodes);
 	  result = treePsr->start(treePsr);
-    array_init(return_value);
-    add_next_index_bool(return_value, result.isPath);
-    add_next_index_string(return_value, result.result->chars, 1); 
+	  if (result.result) {
+      array_init(return_value);
+      add_next_index_bool(return_value, result.isPath);
+      add_next_index_string(return_value, result.result->chars, 1); 
+    } else {
+      ZVAL_NULL(return_value);
+    }
 	  treePsr->free(treePsr);
 	  nodes->free(nodes);
 	} else {
-    RETURN_NULL();
+    ZVAL_NULL(return_value);
   }
 	tstream->free(tstream);
 	psr->free(psr);
