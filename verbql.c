@@ -3,8 +3,13 @@
 #include "VerbQueryLanguageTreeParser.h"
 
 char *resolveFunction(char *function, char **args) {
-  char **arg;
   return function;
+}
+
+RangeFunctionRange resolveRangeFunction(char *function, char **args) {
+  RangeFunctionRange r;
+  r.low = r.high = function;
+  return r;
 }
 
 char *resolvePath(char *path) {

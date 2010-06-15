@@ -61,7 +61,7 @@ start
 returns [ pANTLR3_STRING result, int isPath ]
   : expr EOF
     {
-      $isPath = $expr.isPath;
+      $isPath = ($expr.isPath > 0);
       $result = $expr.result;
     }
   ;
@@ -75,7 +75,7 @@ returns [ pANTLR3_STRING result, int isPath ]
     }
   | value
     {
-      $isPath = 0;
+      $isPath = $value.isPath;
       $result = $value.result;
     }
   ;
@@ -98,7 +98,7 @@ evaledExpr
 returns [ pANTLR3_STRING result ]
   : expr
     {
-      if ($expr.isPath) {
+      if ($expr.isPath == 1) {
         $result = $expr.result;
         $result->set8($result, resolvePath($expr.result->chars));
       } else {
@@ -346,8 +346,47 @@ returns [ pANTLR3_STRING result ]
     {
       return $predicateComparisonOper.result;
     }
+  | predicateRangeOper
+    {
+      return $predicateRangeOper.result;
+    }
   ;
   
+predicateRangeOper
+returns [ pANTLR3_STRING result ]
+  : ^(COLON p1=predicateExpr p2=rangeFunction)
+	  {
+      $result = newStr($COLON, $p1.result->chars);
+      if (strcmp($p2.lowResult->chars, "") && strcmp($p2.highResult->chars, "")) {
+        $result->append8($result, ">='");
+        $result->appendS($result, $p2.lowResult);
+        $result->append8($result, "'][");
+        $result->appendS($result, $p1.result);
+        $result->append8($result, "<'");
+        $result->appendS($result, $p2.highResult);
+        $result->append8($result, "'");
+      } else {
+        $result->append8($result, "='0'");
+      }
+	  }
+	;
+	
+rangeFunction
+returns [ pANTLR3_STRING lowResult, pANTLR3_STRING highResult ]
+	:	^(NODE_FUNCTION FUNCTION 
+	    {
+	      functionArgCount = 0;
+        functionArgList[0] = NULL;
+	    }
+	    expressionList?
+	  )
+	  {
+	    RangeFunctionRange ret = resolveRangeFunction($FUNCTION.text->subString($FUNCTION.text, 0, strlen($FUNCTION.text->chars) - 1)->chars, functionArgList);
+	    $lowResult = newStr($FUNCTION, ret.low);
+	    $highResult = newStr($FUNCTION, ret.high);
+	  }
+	;
+	
 predicateEqualityOper
 returns [ pANTLR3_STRING result ]
   : ^(equalityOper p1=predicateExpr p2=predicateExpr)
@@ -426,25 +465,30 @@ returns [ pANTLR3_STRING result ]
   ;
 	
 value
-returns [ pANTLR3_STRING result ]
+returns [ pANTLR3_STRING result, int isPath ]
   : ^(NODE_VALUE STRING)
     {
+      $isPath = 0;
       $result = $STRING.text->subString($STRING.text, 1, strlen($STRING.text->chars) - 1);
     }
   | ^(NODE_VALUE FLOAT)
     {
+      $isPath = 0;
       $result = $FLOAT.text;
     }
   | ^(NODE_VALUE INT)
     {
+      $isPath = 2;
       $result = $INT.text;
     }
 	| variable
 	  {
+      $isPath = 0;
 	    $result = $variable.result;
 	  }
 	| function 
 	  {
+      $isPath = 0;
 	    $result = $function.result;
 	  }
 	;

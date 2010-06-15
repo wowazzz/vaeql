@@ -41,7 +41,7 @@ tokens {
 	POOPOO = '$$$$$$$$$$$$' ;
 	
 	IFTRUE = '?' ;
-	IFFALSE = ':' ;
+	COLON = ':' ;
 	
 	LBRACKET = '[' ;
 	RBRACKET = ']' ;
@@ -87,7 +87,7 @@ multExpr
   ;
 
 ifExpr
-	: e1=notExpr (IFTRUE^ notExpr IFFALSE! notExpr)?
+	: e1=notExpr (IFTRUE^ notExpr COLON! notExpr)?
 	;
 	
 notExpr
@@ -134,6 +134,10 @@ relativePath
   : pathStep (SLASH^ pathStepInternal)*
   ;
   
+relativePathWithoutPredicates
+  : (NAME | DOT_STEP) (SLASH^ (NAME | DOT_STEP))*
+  ;
+  
 unionPath
   : relativePath (PIPE^ relativePath)*
   ;
@@ -160,6 +164,7 @@ predicate
 
 predicateExpr
   : predicateAndExpr (orOper^ predicateAndExpr)*
+  | relativePathWithoutPredicates COLON^ function
   ;
   
 predicateAndExpr

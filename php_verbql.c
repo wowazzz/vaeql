@@ -27,6 +27,41 @@ char *resolveFunction(char *function, char **args) {
   return result;
 }
 
+RangeFunctionRange resolveRangeFunction(char *function, char **args) {
+  zval func, retval, function_param, arguments_param, *params[2], **retdata;
+  HashTable *ret_hash;
+  HashPosition pointer;
+  char **arg;
+  RangeFunctionRange r;
+  r.low = r.high = NULL;
+  INIT_ZVAL(function_param);
+  params[0] = &function_param;
+  params[1] = &arguments_param;
+  ZVAL_STRING(params[0], function, 0);
+  ZVAL_STRING(&func, "_verbql_range_function", 0);
+  array_init(&arguments_param);
+  for (arg = args; *arg; arg++) {
+    add_next_index_string(&arguments_param, *arg, 1);
+  } 
+  if (call_user_function(EG(function_table), NULL, &func, &retval, 2, params TSRMLS_CC) == FAILURE) {
+    return r;
+  }
+  ret_hash = Z_ARRVAL_P(&retval);
+  if (zend_hash_num_elements(ret_hash)) {
+    for (zend_hash_internal_pointer_reset_ex(ret_hash, &pointer); 
+         zend_hash_get_current_data_ex(ret_hash, (void**) &retdata, &pointer) == SUCCESS; 
+         zend_hash_move_forward_ex(ret_hash, &pointer)) {
+      convert_to_string_ex(retdata);
+      if (r.low == NULL) {
+        r.low = (char *)Z_STRVAL_PP(retdata);
+      } else {
+        r.high = (char *)Z_STRVAL_PP(retdata);
+      }
+    }
+  }
+  return r;
+}
+
 char *resolvePath(char *path) {
   zval func, retval, param, *params[1];
   char *result;
