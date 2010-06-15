@@ -264,6 +264,14 @@ returns [ pANTLR3_STRING result ]
     {
       $result = $NAME.text;
     }
+  | DOT_STEP
+    {
+      $result = $DOT_STEP.text;
+    }
+  | PERMALINK
+    {
+      $result = $PERMALINK.text;
+    }
   | variable
     {
       $result = $variable.result;

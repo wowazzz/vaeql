@@ -85,32 +85,49 @@ ZEND_NAMED_FUNCTION(_verbql_query_internal) {
   }
 
   /* Lex and Parse */
-  istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)query, (ANTLR3_UINT64)strlen(query), NULL);
-  lxr	= VerbQueryLanguageLexerNew(istream);
-  tstream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lxr));
-  psr	= VerbQueryLanguageParserNew(tstream);
-  langAST = psr->start(psr);
-	if (psr->pParser->rec->state->errorCount == 0) {
-		nodes	= antlr3CommonTreeNodeStreamNewTree(langAST.tree, ANTLR3_SIZE_HINT);
-		//printf("Nodes: %s\n", langAST.tree->toStringTree(langAST.tree)->chars);
-    treePsr	= VerbQueryLanguageTreeParserNew(nodes);
-	  result = treePsr->start(treePsr);
-	  if (result.result) {
-      array_init(return_value);
-      add_next_index_bool(return_value, result.isPath);
-      add_next_index_string(return_value, result.result->chars, 1); 
+  if (istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)query, (ANTLR3_UINT64)strlen(query), NULL)) {
+    if (lxr	= VerbQueryLanguageLexerNew(istream)) {
+      if (tstream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lxr))) {
+        if (psr	= VerbQueryLanguageParserNew(tstream)) {
+          langAST = psr->start(psr);
+        	if (psr->pParser->rec->state->errorCount == 0) {
+        		if (nodes	= antlr3CommonTreeNodeStreamNewTree(langAST.tree, ANTLR3_SIZE_HINT)) {
+        		  if (treePsr	= VerbQueryLanguageTreeParserNew(nodes)) {
+            	  result = treePsr->start(treePsr);
+            	  if (result.result) {
+                  array_init(return_value);
+                  add_next_index_bool(return_value, result.isPath);
+                  add_next_index_string(return_value, result.result->chars, 1); 
+                } else {
+                  ZVAL_LONG(return_value, -2);
+                }
+            	  treePsr->free(treePsr);
+        	    } else {
+                ZVAL_LONG(return_value, -101);
+        	    } 
+          	  nodes->free(nodes);
+          	} else {
+              ZVAL_LONG(return_value, -102);
+        	  }
+        	} else {
+            ZVAL_LONG(return_value, -1);
+          }
+        	psr->free(psr);
+        } else {
+          ZVAL_LONG(return_value, -103);
+        }
+      	tstream->free(tstream);
+    	} else {
+        ZVAL_LONG(return_value, -104);
+  	  }
+    	lxr->free(lxr);
     } else {
-      ZVAL_NULL(return_value);
+      ZVAL_LONG(return_value, -105);
     }
-	  treePsr->free(treePsr);
-	  nodes->free(nodes);
-	} else {
-    ZVAL_NULL(return_value);
+  	istream->close(istream);
+  } else {
+    ZVAL_LONG(return_value, -106);
   }
-	tstream->free(tstream);
-	psr->free(psr);
-	lxr->free(lxr);
-	istream->close(istream);
 }
 
 /* PHP Function Table */

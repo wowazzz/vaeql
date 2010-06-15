@@ -116,6 +116,7 @@ path
   : unionPath -> ^(NODE_PATH unionPath)
   | idPath -> ^(NODE_PATH idPath)
   | absolutePath -> ^(NODE_PATH absolutePath)
+  | PERMALINK -> ^(NODE_PATH PERMALINK)
 	|	SQL pathStep -> ^(NODE_SQL pathStep)
   ;
     
@@ -226,6 +227,10 @@ multOper
 STRING
   :  ('"' (~('\\'|'"') | ESC_SEQ)* '"')
   |  ('\'' (~('\\'|'\'') | ESC_SEQ)* '\'')
+  ;
+  
+PERMALINK
+  : 'permalink/' ('a'..'z'|'0'..'9'|'-'|'/')*
   ;
   
 FLOAT
