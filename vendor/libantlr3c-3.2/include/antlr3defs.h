@@ -492,7 +492,7 @@ typedef ANTLR3_UINT32				ANTLR3_INTKEY;
 /// if your system does not have a fprintf. Note that you can define this to be <code>//</code>
 /// without harming the runtime. 
 ///
-#define	ANTLR3_FPRINTF							fprintf
+#define	ANTLR3_FPRINTF							//
 #endif
 
 #ifdef __cplusplus
