@@ -126,6 +126,7 @@ absolutePath
 	
 idPath
 	: AT^? (INT | variable | functionNoArgs) SLASH^ relativePath
+	| AT^ (INT | variable | functionNoArgs)
 	;
   
 relativePath 
