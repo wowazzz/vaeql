@@ -46,6 +46,18 @@ options
     }
   }
   
+  pANTLR3_STRING predicateResult(pANTLR3_STRING p1, pANTLR3_STRING p2, char *sym) {
+    if (!strlen(p1->chars)) {
+      return p1;
+    } else if (!strlen(p2->chars)) {
+      return p2;
+    } else {
+      p1->append8(p1, sym);
+      p1->appendS(p1, p2);
+      return p1;
+    }
+  }
+  
   pANTLR3_STRING newStr(pANTLR3_BASE_TREE e, char *c) {
     return e->strFactory->newStr(e->strFactory, c);
   }
@@ -247,13 +259,11 @@ returns [ pANTLR3_STRING result ]
     }
   | ^(NODE_PREDICATE predicate p3=path)
     {
+      $result = $p3.result;
       if (strlen($predicate.result->chars)) {
-        $result = $p3.result;
         $result->append8($result, "[");
         $result->appendS($result, $predicate.result);
         $result->append8($result, "]");
-      } else {
-        $result = newStr($NODE_PREDICATE, "");
       }
     }
   | INT
@@ -305,22 +315,23 @@ returns [ pANTLR3_STRING result ]
   ;
   
 predicateExpr
-returns [ pANTLR3_STRING result ]
+returns [ pANTLR3_STRING result, int isBlankVariable ]
   : predicatePath
     {
-      return $predicatePath.result;
+      $isBlankVariable = 0;
+      $result = $predicatePath.result;
     }
   | value
 	  {
 	    $result = $value.result;
-	    if (strlen($value.result->chars)) {
+	    if (!$value.isBlankVariable) {
 	      $result->insert8($result, 0, "'");
 	      $result->append8($result, "'");
-	    }
+      }
 	  }
   | predicateOper
     {
-      return $predicateOper.result;
+      $result = $predicateOper.result;
     }
   ;
   
@@ -391,9 +402,7 @@ predicateEqualityOper
 returns [ pANTLR3_STRING result ]
   : ^(equalityOper p1=predicateExpr p2=predicateExpr)
 	  {
-	    $result = $p1.result;
-      $result->append8($result, "=");
-      $result->appendS($result, $p2.result);
+	    $result = predicateResult($p1.result, $p2.result, "=");
 	  }
 	;
 	
@@ -401,9 +410,7 @@ predicateInequalityOper
 returns [ pANTLR3_STRING result ]
   : ^(inequalityOper p1=predicateExpr p2=predicateExpr)
 	  {
-	    $result = $p1.result;
-      $result->append8($result, "!=");
-      $result->appendS($result, $p2.result);
+	    $result = predicateResult($p1.result, $p2.result, "!=");
 	  }
 	;
 	
@@ -411,9 +418,7 @@ predicateAndOper
 returns [ pANTLR3_STRING result ]
   : ^(andOper p1=predicateExpr p2=predicateExpr)
 	  {
-	    $result = $p1.result;
-      $result->append8($result, " and ");
-      $result->appendS($result, $p2.result);
+	    $result = predicateResult($p1.result, $p2.result, " and ");
 	  }
 	;
 	
@@ -421,9 +426,7 @@ predicateOrOper
 returns [ pANTLR3_STRING result ]
   : ^(orOper p1=predicateExpr p2=predicateExpr)
 	  {
-	    $result = $p1.result;
-      $result->append8($result, " or ");
-      $result->appendS($result, $p2.result);
+	    $result = predicateResult($p1.result, $p2.result, " or ");
 	  }
 	;
 	
@@ -431,9 +434,7 @@ predicateComparisonOper
 returns [ pANTLR3_STRING result ]
   : ^(comparisonOper p1=predicateExpr p2=predicateExpr)
 	  {
-	    $result = $p1.result;
-      $result->appendS($result, $comparisonOper.text);
-      $result->appendS($result, $p2.result);
+	    $result = predicateResult($p1.result, $p2.result, $comparisonOper.text->chars);
 	  }
 	;
 
@@ -465,30 +466,35 @@ returns [ pANTLR3_STRING result ]
   ;
 	
 value
-returns [ pANTLR3_STRING result, int isPath ]
+returns [ pANTLR3_STRING result, int isPath, int isBlankVariable ]
   : ^(NODE_VALUE STRING)
     {
       $isPath = 0;
+      $isBlankVariable = 0;
       $result = $STRING.text->subString($STRING.text, 1, strlen($STRING.text->chars) - 1);
     }
   | ^(NODE_VALUE FLOAT)
     {
       $isPath = 0;
+      $isBlankVariable = 0;
       $result = $FLOAT.text;
     }
   | ^(NODE_VALUE INT)
     {
       $isPath = 2;
+      $isBlankVariable = 0;
       $result = $INT.text;
     }
 	| variable
 	  {
       $isPath = 0;
 	    $result = $variable.result;
+      $isBlankVariable = (strlen($result->chars) == 0);
 	  }
 	| function 
 	  {
       $isPath = 0;
+      $isBlankVariable = 0;
 	    $result = $function.result;
 	  }
 	;
