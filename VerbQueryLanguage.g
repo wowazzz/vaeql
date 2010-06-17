@@ -12,10 +12,13 @@ tokens {
 	NODE_PATH ;
 	NODE_PREDICATE ;
 	NODE_SQL ;
+	NODE_STAR ;
 	NODE_VALUE ;
 
 	DIV = '//' ;
+	MULT = '**' ;
 	SLASH = '/' ;
+	STAR = '*' ;
 	SQL = '~' ;
 	AT = '@' ;
 	
@@ -34,7 +37,6 @@ tokens {
 	NOT = '!' ;
 	ADD_TOK = '+' ;
 	SUB = '-' ;
-	MULT = '*' ;
 	MOD = '%';
 	
 	PIPE = '|';
@@ -143,7 +145,7 @@ unionPath
   ;
 
 pathStep
-  : ( axisSpecifier^? NAME | DOT_STEP ) predicate^*
+  : ( axisSpecifier^? NAME | DOT_STEP | STAR ) predicate^*
   ;
 
 pathStepInternal
@@ -235,7 +237,7 @@ STRING
   ;
   
 PERMALINK
-  : 'permalink/' ('a'..'z'|'0'..'9'|'-'|'/')*
+  : 'permalink/' ('a'..'z'|'A'..'Z'|'0'..'9'|'-'|'/')*
   ;
   
 FLOAT

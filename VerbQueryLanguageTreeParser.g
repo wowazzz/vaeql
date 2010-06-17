@@ -274,6 +274,10 @@ returns [ pANTLR3_STRING result ]
     {
       $result = $NAME.text;
     }
+  | STAR
+    {
+      $result = $STAR.text;
+    }
   | DOT_STEP
     {
       $result = $DOT_STEP.text;
