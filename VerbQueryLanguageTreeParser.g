@@ -345,7 +345,7 @@ returns [ pANTLR3_STRING result, int isBlankVariable ]
 	  {
 	    $result = $value.result;
 	    if (!$value.isBlankVariable) {
-	      $result->set8($result, replace_str($result->chars, "'", "&apos;"));
+	      $result->set8($result, replace_str($result->chars, "'", "&#39;"));
 	      $result->insert8($result, 0, "'");
 	      $result->append8($result, "'");
       }
