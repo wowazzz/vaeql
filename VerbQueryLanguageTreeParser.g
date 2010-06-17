@@ -329,8 +329,8 @@ returns [ pANTLR3_STRING result, int isBlankVariable ]
 	  {
 	    $result = $value.result;
 	    if (!$value.isBlankVariable) {
-	      $result->insert8($result, 0, "'");
-	      $result->append8($result, "'");
+	      $result->insert8($result, 0, "\"");
+	      $result->append8($result, "\"");
       }
 	  }
   | predicateOper
