@@ -67,6 +67,22 @@ options
     sprintf(buf, "\%lg", t);
     return e->strFactory->newStr(e->strFactory, buf);
   }
+
+  char *replace_str(char *str, char *orig, char *rep) {
+    static char buffer[1024], buffer2[1024];
+    char *p, *b = buffer, *b2 = buffer2;
+    strncpy(buffer, str, 1023);
+    do {
+      if(!(p = strstr(b, orig))) {
+        printf("Satisfied with: \%s\n", b);
+        return buffer;
+      }
+      strncpy(buffer2, buffer, 1023);
+      sprintf(p, "\%s\%s", rep, b2+(p-b)+strlen(orig));
+      printf("So far: \%s\n", b);
+    } while (1);
+  }
+
 }
 
 start
@@ -329,8 +345,9 @@ returns [ pANTLR3_STRING result, int isBlankVariable ]
 	  {
 	    $result = $value.result;
 	    if (!$value.isBlankVariable) {
-	      $result->insert8($result, 0, "\"");
-	      $result->append8($result, "\"");
+	      $result->set8($result, replace_str($result->chars, "'", "&apos;"));
+	      $result->insert8($result, 0, "'");
+	      $result->append8($result, "'");
       }
 	  }
   | predicateOper

@@ -31,8 +31,11 @@ int ANTLR3_CDECL main(int argc, char *argv[]) {
   pANTLR3_COMMON_TOKEN_STREAM	tstream;
   pANTLR3_COMMON_TREE_NODE_STREAM	nodes;
   VerbQueryLanguageTreeParser_start_return result;
+  
+  char *i = argv[1];
+  //char i[] = "artists[name=\"Jake\'s Dilemma\"]";
 
-  istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)argv[1], (ANTLR3_UINT64)strlen(argv[1]), NULL);
+  istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)i, (ANTLR3_UINT64)strlen(i), NULL);
 
   lxr	= VerbQueryLanguageLexerNew(istream);
   if (lxr == NULL) {
