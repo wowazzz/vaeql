@@ -74,12 +74,10 @@ options
     strncpy(buffer, str, 1023);
     do {
       if(!(p = strstr(b, orig))) {
-        printf("Satisfied with: \%s\n", b);
         return buffer;
       }
       strncpy(buffer2, buffer, 1023);
       sprintf(p, "\%s\%s", rep, b2+(p-b)+strlen(orig));
-      printf("So far: \%s\n", b);
     } while (1);
   }
 
