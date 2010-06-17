@@ -237,7 +237,7 @@ STRING
   ;
   
 PERMALINK
-  : 'permalink/' ('a'..'z'|'A'..'Z'|'0'..'9'|'-'|'/')*
+  : 'permalink/' ('a'..'z'|'A'..'Z'|'0'..'9'|'-'|'_'|'/'|'.')*
   ;
   
 FLOAT
