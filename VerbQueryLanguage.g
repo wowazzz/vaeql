@@ -115,11 +115,15 @@ functionNoArgs
   ;
 
 path 
-  : unionPath -> ^(NODE_PATH unionPath)
-  | idPath -> ^(NODE_PATH idPath)
-  | absolutePath -> ^(NODE_PATH absolutePath)
-  | PERMALINK -> ^(NODE_PATH PERMALINK)
+  : rootPath -> ^(NODE_PATH rootPath)
 	|	SQL pathStep -> ^(NODE_SQL pathStep)
+  ;
+  
+rootPath
+  : unionPath
+  | idPath
+  | absolutePath
+  | PERMALINK
   ;
     
 absolutePath 
@@ -145,7 +149,7 @@ unionPath
   ;
 
 pathStep
-  : ( axisSpecifier^? NAME | DOT_STEP | STAR ) predicate^*
+  : ( axisSpecifier^? (NAME | DOT_STEP | STAR) ) predicate^*
   ;
 
 pathStepInternal
