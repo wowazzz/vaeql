@@ -448,6 +448,11 @@ returns [ pANTLR3_STRING result ]
     {
       $result = $slash.result;
     }
+  | ^(AT p=predicatePath)
+    {
+      $result = $AT.text;
+      $result->appendS($result, $p.result);
+    }
   | NAME
     {
       $result = $NAME.text;
