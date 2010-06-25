@@ -10,10 +10,12 @@ tokens {
   NODE_IF ;
   NODE_PARENEXPR ;
 	NODE_PATH ;
+	NODE_PATHREF ;
 	NODE_PREDICATE ;
 	NODE_SQL ;
 	NODE_STAR ;
 	NODE_VALUE ;
+  NODE_XPATHFUNCTION ;
 
 	DIV = '//' ;
 	MULT = '**' ;
@@ -44,6 +46,7 @@ tokens {
 	
 	IFTRUE = '?' ;
 	COLON = ':' ;
+	PATHREF = '&' ;
 	
 	LBRACKET = '[' ;
 	RBRACKET = ']' ;
@@ -171,6 +174,7 @@ predicate
 predicateExpr
   : predicateAndExpr (orOper^ predicateAndExpr)*
   | relativePathWithoutPredicates COLON^ function
+  | INT
   ;
   
 predicateAndExpr
@@ -178,11 +182,12 @@ predicateAndExpr
   ;
 
 predicateComparisonExpr
-  : predicatePathExpr (comparisonOper^ predicatePathExpr)?
+  : predicatePathExpr comparisonOper^ predicatePathExpr
   ;
 
 predicatePathExpr
   : unionPath
+  | PATHREF unionPath -> ^(NODE_PATHREF ^(NODE_PATH unionPath))
   | filterExpr (SLASH^ relativePath)?
   ;
 
@@ -194,6 +199,11 @@ primaryExpr
   : LPAREN predicateExpr RPAREN -> ^(NODE_PARENEXPR predicateExpr)
   | value 
   | function
+  | xpathFunction
+  ;
+  
+xpathFunction
+	: XPATH_FUNCTION expressionList RPAREN -> ^(NODE_XPATHFUNCTION XPATH_FUNCTION expressionList)
   ;
   
 andOper
@@ -255,6 +265,115 @@ INT
   
 VARIABLE
 	:	'$' ('a'..'z'|'A'..'Z'|'0'..'9'|'_')*
+  ;
+  
+XPATH_FUNCTION
+  : 'node-name('
+  | 'nilled('
+  | 'data('
+  | 'base-uri('
+  | 'document-uri('
+  | 'error('
+  | 'trace('
+  | 'number('
+  | 'abs('
+  | 'ceiling('
+  | 'round('
+  | 'round-half-to-even('
+  | 'string('
+  | 'codepoints-to-string('
+  | 'string-to-codepoints('
+  | 'codepoint-equal('
+  | 'compare('
+  | 'concat('
+  | 'string-join('
+  | 'substring('
+  | 'string-length('
+  | 'normalize-space('
+  | 'normalize-unicode('
+  | 'lower-case('
+  | 'translate('
+  | 'escape-uri('
+  | 'contains('
+  | 'starts-with('
+  | 'ends-with('
+  | 'substring-before('
+  | 'substring-after('
+  | 'matches('
+  | 'replace('
+  | 'tokenize('
+  | 'resolve-uri('
+  | 'boolean('
+  | 'not('
+  | 'true('
+  | 'false('
+  | 'dateTime('
+  | 'years-from-duration('
+  | 'months-from-duration('
+  | 'days-from-duration('
+  | 'hours-from-duration('
+  | 'minutes-from-duration('
+  | 'seconds-from-duration('
+  | 'year-from-dateTime('
+  | 'month-from-dateTime('
+  | 'day-from-dateTime('
+  | 'hours-from-dateTime('
+  | 'minutes-from-dateTime('
+  | 'seconds-from-dateTime('
+  | 'timezone-from-dateTime('
+  | 'year-from-date('
+  | 'month-from-date('
+  | 'day-from-date('
+  | 'timezone-from-date('
+  | 'hours-from-time('
+  | 'minutes-from-time('
+  | 'seconds-from-time('
+  | 'timezone-from-time('
+  | 'adjust-dateTime-to-timezone('
+  | 'adjust-date-to-timezone('
+  | 'adjust-time-to-timezone('
+  | 'QName('
+  | 'local-name-from-QName('
+  | 'namespace-uri-from-QName('
+  | 'namespace-uri-for-prefix('
+  | 'in-scope-prefixes('
+  | 'resolve-QName('
+  | 'name('
+  | 'local-name('
+  | 'namespace-uri('
+  | 'lang('
+  | 'root('
+  | 'index-of('
+  | 'remove('
+  | 'empty('
+  | 'exists('
+  | 'distinct-values('
+  | 'insert-before('
+  | 'reverse('
+  | 'subsequence('
+  | 'unordered('
+  | 'zero-or-one('
+  | 'one-or-mpre('
+  | 'exactly-one('
+  | 'deep-equal('
+  | 'count('
+  | 'avg('
+  | 'max('
+  | 'min('
+  | 'sum('
+  | 'id('
+  | 'idref('
+  | 'doc('
+  | 'doc-available('
+  | 'collection('
+  | 'position('
+  | 'last('
+  | 'current-dateTime('
+  | 'current-date('
+  | 'current-time('
+  | 'implicit-timezone('
+  | 'default-collection('
+  | 'static-base-uri('
   ;
 
 FUNCTION

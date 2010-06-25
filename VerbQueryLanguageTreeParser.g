@@ -10,7 +10,7 @@ options
 @header
 {
 #include "verbql.h"
-#define FUNCTION_ARG_LIST_SIZE 10
+#define FUNCTION_ARG_LIST_SIZE 25
 }
 
 @members
@@ -37,6 +37,21 @@ options
     double dummy;
     return (sscanf(a->chars, "\%lf", &dummy) && sscanf(b->chars, "\%lf", &dummy));
   }
+
+  char *replace_str(char *str, char *orig, char *rep) {
+    static char buffer[1024];
+    char buffer2[1024];
+    char *p, *b = buffer, *b2 = buffer2;
+    strncpy(buffer, str, 1023);
+    do {
+      if(!(p = strstr(b, orig))) {
+        return buffer;
+      }
+      strncpy(buffer2, buffer, 1023);
+      sprintf(p, "\%s\%s", rep, b2+(p-buffer)+strlen(orig));
+      b += (p-buffer)+strlen(rep);
+    } while (1);
+  }
   
   pANTLR3_STRING booleanResponse(int t, pANTLR3_BASE_TREE e) {
     if (t) {
@@ -45,6 +60,17 @@ options
       return e->strFactory->newStr(e->strFactory, "0");
     }
   }
+  
+  pANTLR3_STRING escapeApos(pANTLR3_STRING e) {
+    if (strstr(e->chars, "'")) {
+      e->set8(e, replace_str(replace_str(e->chars, "&#039;", "'"), "'", "',\"'\",'"));
+	    e->insert8(e, 0, "concat('");
+	    e->append8(e, "')");
+    } else {
+	    e->insert8(e, 0, "'");
+	    e->append8(e, "'");
+	  }
+	}
   
   pANTLR3_STRING predicateResult(pANTLR3_STRING p1, pANTLR3_STRING p2, char *sym) {
     if (!strlen(p1->chars)) {
@@ -68,19 +94,6 @@ options
     return e->strFactory->newStr(e->strFactory, buf);
   }
 
-  char *replace_str(char *str, char *orig, char *rep) {
-    static char buffer[1024], buffer2[1024];
-    char *p, *b = buffer, *b2 = buffer2;
-    strncpy(buffer, str, 1023);
-    do {
-      if(!(p = strstr(b, orig))) {
-        return buffer;
-      }
-      strncpy(buffer2, buffer, 1023);
-      sprintf(p, "\%s\%s", rep, b2+(p-b)+strlen(orig));
-    } while (1);
-  }
-
 }
 
 start
@@ -92,17 +105,18 @@ returns [ pANTLR3_STRING result, int isPath ]
     }
   ;
   
-rootExpr
-returns [ pANTLR3_STRING result, int isPath ]
-  : oper
+at
+returns [ pANTLR3_STRING result ]
+  : ^(AT p1=path)
     {
-      $isPath = $oper.isPath;
-      $result = $oper.result;
+      $result = $p1.result;
+      $result->insert8($result, 0, "@");
     }
-  | value
+  | ^(XPATH_AXIS_SEP XPATH_AXES p2=path)
     {
-      $isPath = $value.isPath;
-      $result = $value.result;
+      $result = $XPATH_AXES.text;
+      $result->appendS($result, $XPATH_AXIS_SEP.text);
+      $result->appendS($result, $p2.result);
     }
   ;
   
@@ -146,7 +160,7 @@ returns [ pANTLR3_STRING result ]
 	    $result = newStr($FUNCTION, resolveFunction($FUNCTION.text->subString($FUNCTION.text, 0, strlen($FUNCTION.text->chars) - 1)->chars, functionArgList));
 	  }
 	;
-	
+
 expressionList
   : ^(COMMA expressionList expressionList) 
   | evaledExpr
@@ -242,21 +256,6 @@ returns [ pANTLR3_STRING result, int isPath ]
     }
 	;
   
-at
-returns [ pANTLR3_STRING result ]
-  : ^(AT p1=path)
-    {
-      $result = $p1.result;
-      $result->insert8($result, 0, "@");
-    }
-  | ^(XPATH_AXIS_SEP XPATH_AXES p2=path)
-    {
-      $result = $XPATH_AXES.text;
-      $result->appendS($result, $XPATH_AXIS_SEP.text);
-      $result->appendS($result, $p2.result);
-    }
-  ;
-  
 path
 returns [ pANTLR3_STRING result ]
   : slash
@@ -333,19 +332,20 @@ returns [ pANTLR3_STRING result ]
   ;
   
 predicateExpr
-returns [ pANTLR3_STRING result, int isBlankVariable ]
+returns [ pANTLR3_STRING result ]
   : predicatePath
     {
-      $isBlankVariable = 0;
       $result = $predicatePath.result;
     }
+  | xpathFunction
+	  {
+	    $result = $xpathFunction.result;
+	  }
   | value
 	  {
 	    $result = $value.result;
 	    if (!$value.isBlankVariable) {
-	      $result->set8($result, replace_str($result->chars, "'", "&#039;"));
-	      $result->insert8($result, 0, "'");
-	      $result->append8($result, "'");
+	      escapeApos($result);
       }
 	  }
   | predicateOper
@@ -381,42 +381,29 @@ returns [ pANTLR3_STRING result ]
       return $predicateRangeOper.result;
     }
   ;
-  
-predicateRangeOper
+
+predicatePath
 returns [ pANTLR3_STRING result ]
-  : ^(COLON p1=predicateExpr p2=rangeFunction)
-	  {
-      $result = newStr($COLON, $p1.result->chars);
-      if (strcmp($p2.lowResult->chars, "") && strcmp($p2.highResult->chars, "")) {
-        $result->append8($result, ">='");
-        $result->appendS($result, $p2.lowResult);
-        $result->append8($result, "'][");
-        $result->appendS($result, $p1.result);
-        $result->append8($result, "<'");
-        $result->appendS($result, $p2.highResult);
-        $result->append8($result, "'");
-      } else {
-        $result->append8($result, "='0'");
-      }
-	  }
-	;
-	
-rangeFunction
-returns [ pANTLR3_STRING lowResult, pANTLR3_STRING highResult ]
-	:	^(NODE_FUNCTION FUNCTION 
-	    {
-	      functionArgCount = 0;
-        functionArgList[0] = NULL;
-	    }
-	    expressionList?
-	  )
-	  {
-	    RangeFunctionRange ret = resolveRangeFunction($FUNCTION.text->subString($FUNCTION.text, 0, strlen($FUNCTION.text->chars) - 1)->chars, functionArgList);
-	    $lowResult = newStr($FUNCTION, ret.low);
-	    $highResult = newStr($FUNCTION, ret.high);
-	  }
-	;
-	
+  : slash
+    {
+      $result = $slash.result;
+    }
+  | ^(AT p=predicatePath)
+    {
+      $result = $AT.text;
+      $result->appendS($result, $p.result);
+    }
+  | ^(NODE_PATHREF evaledExpr)
+    {
+      $result = $evaledExpr.result;
+	    escapeApos($result);
+    }
+  | NAME
+    {
+      $result = $NAME.text;
+    }
+  ;
+  
 predicateEqualityOper
 returns [ pANTLR3_STRING result ]
   : ^(equalityOper p1=predicateExpr p2=predicateExpr)
@@ -456,21 +443,68 @@ returns [ pANTLR3_STRING result ]
 	    $result = predicateResult($p1.result, $p2.result, $comparisonOper.text->chars);
 	  }
 	;
-
-predicatePath
+	
+predicateRangeOper
 returns [ pANTLR3_STRING result ]
-  : slash
+  : ^(COLON p1=predicateExpr p2=rangeFunction)
+	  {
+      $result = newStr($COLON, $p1.result->chars);
+      if (strcmp($p2.lowResult->chars, "") && strcmp($p2.highResult->chars, "")) {
+        $result->append8($result, ">='");
+        $result->appendS($result, $p2.lowResult);
+        $result->append8($result, "'][");
+        $result->appendS($result, $p1.result);
+        $result->append8($result, "<'");
+        $result->appendS($result, $p2.highResult);
+        $result->append8($result, "'");
+      } else {
+        $result->append8($result, "='0'");
+      }
+	  }
+	;
+	
+rangeFunction
+returns [ pANTLR3_STRING lowResult, pANTLR3_STRING highResult ]
+	:	^(NODE_FUNCTION FUNCTION 
+	    {
+	      functionArgCount = 0;
+        functionArgList[0] = NULL;
+	    }
+	    expressionList?
+	  )
+	  {
+	    RangeFunctionRange ret = resolveRangeFunction($FUNCTION.text->subString($FUNCTION.text, 0, strlen($FUNCTION.text->chars) - 1)->chars, functionArgList);
+	    $lowResult = newStr($FUNCTION, ret.low);
+	    $highResult = newStr($FUNCTION, ret.high);
+	  }
+	;
+	
+rootExpr
+returns [ pANTLR3_STRING result, int isPath ]
+  : oper
     {
-      $result = $slash.result;
+      $isPath = $oper.isPath;
+      $result = $oper.result;
     }
-  | ^(AT p=predicatePath)
+  | value
     {
-      $result = $AT.text;
-      $result->appendS($result, $p.result);
+      $isPath = $value.isPath;
+      $result = $value.result;
     }
-  | NAME
+  ;
+  
+rootPath
+returns [ pANTLR3_STRING result, int isPath ]
+  : ^(NODE_SQL path)
     {
-      $result = $NAME.text;
+      $result = newStr($NODE_SQL, "~");
+      $result->appendS($result, $path.result);
+      $isPath = 1;
+    }
+  | ^(NODE_PATH path) 
+    {
+      $isPath = 1;
+      $result = $path.result;
     }
   ;
   
@@ -531,19 +565,45 @@ returns [ pANTLR3_STRING result ]
       $result->set8($result, resolveVariable($result->chars));
     }
   ;
-    
-rootPath
-returns [ pANTLR3_STRING result, int isPath ]
-  : ^(NODE_SQL path)
+  
+xpathExpr
+returns [ pANTLR3_STRING result ]
+  : ^(NODE_PATH predicatePath)
     {
-      $result = newStr($NODE_SQL, "~");
-      $result->appendS($result, $path.result);
-      $isPath = 1;
+      $result = $predicatePath.result;
     }
-  | ^(NODE_PATH path) 
+  | xpathFunction
+	  {
+	    $result = $xpathFunction.result;
+	  }
+  | value
+	  {
+	    $result = $value.result;
+	    escapeApos($result);
+	  }
+  ;
+  
+xpathFunction
+returns [ pANTLR3_STRING result ]
+	:	^(NODE_XPATHFUNCTION XPATH_FUNCTION xpathFunctionExpression?)
+	  {
+	    $result = $XPATH_FUNCTION.text;
+	    $result->appendS($result, $xpathFunctionExpression.result);
+	    $result->append8($result, ")");
+	  }
+	;
+	
+xpathFunctionExpression
+returns [ pANTLR3_STRING result ]
+  : ^(COMMA x1=xpathFunctionExpression x2=xpathFunctionExpression) 
     {
-      $isPath = 1;
-      $result = $path.result;
+      $result = $x1.result;
+      $result->append8($result, ",");
+      $result->appendS($result, $x2.result);
+    }
+  | xpathExpr
+    {
+      $result = $xpathExpr.result;
     }
   ;
 
