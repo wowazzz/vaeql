@@ -126,6 +126,11 @@ rootPath
   : unionPath
   | idPath
   | absolutePath
+  | permalink
+  ;
+  
+permalink
+  : AT PERMALINK -> ^(AT PERMALINK)
   | PERMALINK
   ;
     
@@ -251,7 +256,7 @@ STRING
   ;
   
 PERMALINK
-  : ('@')? 'permalink/' ('a'..'z'|'A'..'Z'|'0'..'9'|'-'|'_'|'/'|'.')*
+  : 'permalink/' ('a'..'z'|'A'..'Z'|'0'..'9'|'-'|'_'|'/'|'.')*
   ;
   
 FLOAT
