@@ -321,7 +321,7 @@ returns [ pANTLR3_STRING result ]
 
 predicate
 returns [ pANTLR3_STRING result ]
-  : ^(NODE_VALUE INT)
+  : INT
     {
       return $INT.text;
     }
