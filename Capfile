@@ -24,7 +24,7 @@ namespace :deploy do
 		# nothing
 	end
 	task :rollout do
-  	run "cd /www/verbql/current && make && make install && apachectl restart"
+  	run "cd /www/verbql/current && make && make install && /etc/init.d/httpd restart"
 	end
 	task :start do
 		# nothing
