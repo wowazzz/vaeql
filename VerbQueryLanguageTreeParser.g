@@ -299,6 +299,14 @@ returns [ pANTLR3_STRING result ]
     {
       $result = $PERMALINK.text;
     }
+  | SPECIAL_NEXT
+    {
+      $result = $SPECIAL_NEXT.text;
+    }
+  | SPECIAL_PREV
+    {
+      $result = $SPECIAL_PREV.text;
+    }
   | variable
     {
       $result = $variable.result;

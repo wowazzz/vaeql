@@ -17,6 +17,9 @@ tokens {
 	NODE_VALUE ;
   NODE_XPATHFUNCTION ;
 
+  SPECIAL_NEXT = 'next()' ;
+  SPECIAL_PREV = 'prev()' ;
+
 	DIV = '//' ;
 	MULT = '**' ;
 	SLASH = '/' ;
@@ -120,6 +123,8 @@ functionNoArgs
 path 
   : rootPath -> ^(NODE_PATH rootPath)
 	|	SQL pathStep -> ^(NODE_SQL pathStep)
+	| SPECIAL_PREV -> ^(NODE_PATH SPECIAL_PREV)
+	| SPECIAL_NEXT -> ^(NODE_PATH SPECIAL_NEXT)
   ;
   
 rootPath
