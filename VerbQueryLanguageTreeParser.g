@@ -21,7 +21,12 @@ options
 
   int asBoolean(pANTLR3_STRING a) {
     double dummy;
-    if (sscanf(a->chars, "\%lf", &dummy)) return (dummy != 0);
+    if (!strlen(a->chars)) {
+      return 0;
+    }
+    if (sscanf(a->chars, "\%lf", &dummy)) {
+      return (dummy != 0);
+    }
     return strcmp(a->chars, "");
   }
   
