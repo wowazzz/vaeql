@@ -1,11 +1,11 @@
-#include "VerbQueryLanguageLexer.h"
-#include "VerbQueryLanguageParser.h"
-#include "VerbQueryLanguageTreeParser.h"
+#include "VaeQueryLanguageLexer.h"
+#include "VaeQueryLanguageParser.h"
+#include "VaeQueryLanguageTreeParser.h"
 
 #include "php.h"
 
-#include "verbql.h"
-#include "php_verbql.h"
+#include "vaeql.h"
+#include "php_vaeql.h"
 
 char *resolveFunction(char *function, char **args) {
   zval func, retval, function_param, arguments_param, *params[2];
@@ -14,7 +14,7 @@ char *resolveFunction(char *function, char **args) {
   params[0] = &function_param;
   params[1] = &arguments_param;
   ZVAL_STRING(params[0], function, 0);
-  ZVAL_STRING(&func, "_verbql_function", 0);
+  ZVAL_STRING(&func, "_vaeql_function", 0);
   array_init(&arguments_param);
   for (arg = args; *arg; arg++) {
     add_next_index_string(&arguments_param, *arg, 1);
@@ -38,7 +38,7 @@ RangeFunctionRange resolveRangeFunction(char *function, char **args) {
   params[0] = &function_param;
   params[1] = &arguments_param;
   ZVAL_STRING(params[0], function, 0);
-  ZVAL_STRING(&func, "_verbql_range_function", 0);
+  ZVAL_STRING(&func, "_vaeql_range_function", 0);
   array_init(&arguments_param);
   for (arg = args; *arg; arg++) {
     add_next_index_string(&arguments_param, *arg, 1);
@@ -68,7 +68,7 @@ char *resolvePath(char *path) {
   INIT_ZVAL(param);
   params[0] = &param;
   ZVAL_STRING(params[0], path, 0);
-  ZVAL_STRING(&func, "_verbql_path", 0);
+  ZVAL_STRING(&func, "_vaeql_path", 0);
   if (call_user_function(EG(function_table), NULL, &func, &retval, 1, params TSRMLS_CC) == FAILURE) {
     return "";
   }
@@ -83,7 +83,7 @@ char *resolveVariable(char *variable) {
   INIT_ZVAL(param);
   params[0] = &param;
   ZVAL_STRING(params[0], variable, 0);
-  ZVAL_STRING(&func, "_verbql_variable", 0);
+  ZVAL_STRING(&func, "_vaeql_variable", 0);
   if (call_user_function(EG(function_table), NULL, &func, &retval, 1, params TSRMLS_CC) == FAILURE) {
     return "";
   }
@@ -92,21 +92,21 @@ char *resolveVariable(char *variable) {
   return result;
 }
 
-ZEND_NAMED_FUNCTION(_verbql_query_internal) {
+ZEND_NAMED_FUNCTION(_vaeql_query_internal) {
   
   /* PHP */
   zval **args[1];
   char *query;
   
-  /* VerbQueryLanguage */
-  VerbQueryLanguageParser_start_return langAST;
-  pVerbQueryLanguageLexer	lxr;
-  pVerbQueryLanguageParser psr;
-  pVerbQueryLanguageTreeParser treePsr;
+  /* VaeQueryLanguage */
+  VaeQueryLanguageParser_start_return langAST;
+  pVaeQueryLanguageLexer	lxr;
+  pVaeQueryLanguageParser psr;
+  pVaeQueryLanguageTreeParser treePsr;
   pANTLR3_INPUT_STREAM istream;
   pANTLR3_COMMON_TOKEN_STREAM	tstream;
   pANTLR3_COMMON_TREE_NODE_STREAM	nodes;
-  VerbQueryLanguageTreeParser_start_return result;
+  VaeQueryLanguageTreeParser_start_return result;
   
   /* Pull in arg from PHP */
   if(ZEND_NUM_ARGS() != 1 || zend_get_parameters_array_ex(1, args) != SUCCESS) {
@@ -121,13 +121,13 @@ ZEND_NAMED_FUNCTION(_verbql_query_internal) {
 
   /* Lex and Parse */
   if (istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)query, (ANTLR3_UINT64)strlen(query), NULL)) {
-    if (lxr	= VerbQueryLanguageLexerNew(istream)) {
+    if (lxr	= VaeQueryLanguageLexerNew(istream)) {
       if (tstream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lxr))) {
-        if (psr	= VerbQueryLanguageParserNew(tstream)) {
+        if (psr	= VaeQueryLanguageParserNew(tstream)) {
           langAST = psr->start(psr);
         	if (psr->pParser->rec->state->errorCount == 0) {
         		if (nodes	= antlr3CommonTreeNodeStreamNewTree(langAST.tree, ANTLR3_SIZE_HINT)) {
-        		  if (treePsr	= VerbQueryLanguageTreeParserNew(nodes)) {
+        		  if (treePsr	= VaeQueryLanguageTreeParserNew(nodes)) {
             	  result = treePsr->start(treePsr);
             	  if (result.result) {
                   array_init(return_value);
@@ -166,46 +166,46 @@ ZEND_NAMED_FUNCTION(_verbql_query_internal) {
 }
 
 /* PHP Function Table */
-static zend_function_entry VerbQueryLanguage_functions[] = {
-  ZEND_NAMED_FE(_verbql_query_internal, _verbql_query_internal, NULL)
+static zend_function_entry VaeQueryLanguage_functions[] = {
+  ZEND_NAMED_FE(_vaeql_query_internal, _vaeql_query_internal, NULL)
   {NULL, NULL, NULL}
 };
 
 /* PHP Boilerplate */
-zend_module_entry VerbQueryLanguage_module_entry = {
+zend_module_entry VaeQueryLanguage_module_entry = {
 #if ZEND_MODULE_API_NO > 20010900
     STANDARD_MODULE_HEADER,
 #endif
-    (char *)"VerbQueryLanguage",
-    VerbQueryLanguage_functions,
-    PHP_MINIT(VerbQueryLanguage),
-    PHP_MSHUTDOWN(VerbQueryLanguage),
-    PHP_RINIT(VerbQueryLanguage),
-    PHP_RSHUTDOWN(VerbQueryLanguage),
-    PHP_MINFO(VerbQueryLanguage),
+    (char *)"VaeQueryLanguage",
+    VaeQueryLanguage_functions,
+    PHP_MINIT(VaeQueryLanguage),
+    PHP_MSHUTDOWN(VaeQueryLanguage),
+    PHP_RINIT(VaeQueryLanguage),
+    PHP_RSHUTDOWN(VaeQueryLanguage),
+    PHP_MINFO(VaeQueryLanguage),
 #if ZEND_MODULE_API_NO > 20010900
     NO_VERSION_YET,
 #endif
     STANDARD_MODULE_PROPERTIES
 };
 
-PHP_MINIT_FUNCTION(VerbQueryLanguage) {
+PHP_MINIT_FUNCTION(VaeQueryLanguage) {
   return SUCCESS;
 }
 
-PHP_RINIT_FUNCTION(VerbQueryLanguage) {
+PHP_RINIT_FUNCTION(VaeQueryLanguage) {
   return SUCCESS;
 }
 
-PHP_MSHUTDOWN_FUNCTION(VerbQueryLanguage) {
+PHP_MSHUTDOWN_FUNCTION(VaeQueryLanguage) {
   return SUCCESS;
 }
 
-PHP_RSHUTDOWN_FUNCTION(VerbQueryLanguage) {
+PHP_RSHUTDOWN_FUNCTION(VaeQueryLanguage) {
   return SUCCESS;
 }
 
-PHP_MINFO_FUNCTION(VerbQueryLanguage) {
+PHP_MINFO_FUNCTION(VaeQueryLanguage) {
 }
 
-ZEND_GET_MODULE(VerbQueryLanguage)
+ZEND_GET_MODULE(VaeQueryLanguage)

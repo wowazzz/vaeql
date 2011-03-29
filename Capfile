@@ -1,7 +1,7 @@
 load 'deploy'
 default_environment["LC_CTYPE"] = "en_US.UTF-8"
 
-set :application, "verbql"
+set :application, "vaeql"
 set :deploy_via, :remote_cache
 set :deploy_to, "/www/#{application}"
 set :keep_releases, 3
@@ -24,7 +24,7 @@ namespace :deploy do
 		# nothing
 	end
 	task :rollout do
-  	run "cd /www/verbql/current && make && make install && /etc/init.d/httpd restart"
+  	run "cd /www/vaeql/current && make && make install && /etc/init.d/httpd restart"
 	end
 	task :start do
 		# nothing

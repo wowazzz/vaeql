@@ -1,15 +1,15 @@
-tree grammar VerbQueryLanguageTreeParser;
+tree grammar VaeQueryLanguageTreeParser;
 
 options 
 {
-  tokenVocab = VerbQueryLanguage;
+  tokenVocab = VaeQueryLanguage;
   language = C;
   ASTLabelType = pANTLR3_BASE_TREE;
 }
 
 @header
 {
-#include "verbql.h"
+#include "vaeql.h"
 #define FUNCTION_ARG_LIST_SIZE 25
 }
 

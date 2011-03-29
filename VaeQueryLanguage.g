@@ -1,4 +1,4 @@
-grammar VerbQueryLanguage;
+grammar VaeQueryLanguage;
 options {
   language = C;
   output = AST;

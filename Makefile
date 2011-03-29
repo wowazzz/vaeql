@@ -3,41 +3,41 @@ CFLAGS = -g -O2 -fPIC -I/usr/local/include -I. -c
 LDFLAGS =  -L/usr/local/lib -g -o
 LIBS =  -lantlr3c
 
-GEN_SRC = VerbQueryLanguageLexer.c VerbQueryLanguageParser.c VerbQueryLanguageTreeParser.c VerbQueryLanguage.tokens
-GEN_HEADERS = VerbQueryLanguageLexer.h VerbQueryLanguageParser.h VerbQueryLanguageTreeParser.h
-OBJS = VerbQueryLanguageLexer.o VerbQueryLanguageParser.o VerbQueryLanguageTreeParser.o
+GEN_SRC = VaeQueryLanguageLexer.c VaeQueryLanguageParser.c VaeQueryLanguageTreeParser.c VaeQueryLanguage.tokens
+GEN_HEADERS = VaeQueryLanguageLexer.h VaeQueryLanguageParser.h VaeQueryLanguageTreeParser.h
+OBJS = VaeQueryLanguageLexer.o VaeQueryLanguageParser.o VaeQueryLanguageTreeParser.o
 HEADERS = ${GEN_HEADERS}
 	
-default: verbql verbql.so
+default: vaeql vaeql.so
 
 clean:
-	$(RM) verbql *.o *.so
+	$(RM) vaeql *.o *.so
 
-generate: VerbQueryLanguage.g VerbQueryLanguageTreeParser.g
-	java -classpath vendor/antlr-3.2.jar org.antlr.Tool VerbQueryLanguage.g VerbQueryLanguageTreeParser.g
+generate: VaeQueryLanguage.g VaeQueryLanguageTreeParser.g
+	java -classpath vendor/antlr-3.2.jar org.antlr.Tool VaeQueryLanguage.g VaeQueryLanguageTreeParser.g
 
-install: install-verbql.so
+install: install-vaeql.so
 
-install-verbql.so:
-	sudo cp verbql.so `php-config --extension-dir`
+install-vaeql.so:
+	sudo cp vaeql.so `php-config --extension-dir`
 
-php_verbql.o: php_verbql.c
-	${C} `php-config --includes` ${CFLAGS} php_verbql.c
+php_vaeql.o: php_vaeql.c
+	${C} `php-config --includes` ${CFLAGS} php_vaeql.c
 	
-verbql: verbql.o ${OBJS}
-	${C} verbql.o ${OBJS} -lantlr3c -g -O0 -o verbql
+vaeql: vaeql.o ${OBJS}
+	${C} vaeql.o ${OBJS} -lantlr3c -g -O0 -o vaeql
 
-verbql.o: verbql.c
-	${C} ${CFLAGS} verbql.c
+vaeql.o: vaeql.c
+	${C} ${CFLAGS} vaeql.c
 	
-verbql.so: ${OBJS} php_verbql.o
-	${C} -shared -fPIC -Wl,-undefined,dynamic_lookup php_verbql.o ${OBJS} -lantlr3c -o verbql.so
+vaeql.so: ${OBJS} php_vaeql.o
+	${C} -shared -fPIC -Wl,-undefined,dynamic_lookup php_vaeql.o ${OBJS} -lantlr3c -o vaeql.so
 	
-VerbQueryLanguageLexer.o: ${HEADERS} VerbQueryLanguageLexer.c
-	${C} ${CFLAGS} VerbQueryLanguageLexer.c
+VaeQueryLanguageLexer.o: ${HEADERS} VaeQueryLanguageLexer.c
+	${C} ${CFLAGS} VaeQueryLanguageLexer.c
 	
-VerbQueryLanguageParser.o: ${HEADERS} VerbQueryLanguageParser.c
-	${C} ${CFLAGS} VerbQueryLanguageParser.c
+VaeQueryLanguageParser.o: ${HEADERS} VaeQueryLanguageParser.c
+	${C} ${CFLAGS} VaeQueryLanguageParser.c
 	
-VerbQueryLanguageTreeParser.o: ${HEADERS} VerbQueryLanguageTreeParser.c
-	${C} ${CFLAGS} VerbQueryLanguageTreeParser.c
+VaeQueryLanguageTreeParser.o: ${HEADERS} VaeQueryLanguageTreeParser.c
+	${C} ${CFLAGS} VaeQueryLanguageTreeParser.c

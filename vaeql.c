@@ -1,6 +1,6 @@
-#include "VerbQueryLanguageLexer.h"
-#include "VerbQueryLanguageParser.h"
-#include "VerbQueryLanguageTreeParser.h"
+#include "VaeQueryLanguageLexer.h"
+#include "VaeQueryLanguageParser.h"
+#include "VaeQueryLanguageTreeParser.h"
 
 char *resolveFunction(char *function, char **args) {
   return function;
@@ -21,23 +21,23 @@ char *resolveVariable(char *variable) {
 }
 
 int ANTLR3_CDECL main(int argc, char *argv[]) {
-  VerbQueryLanguageParser_start_return langAST;
+  VaeQueryLanguageParser_start_return langAST;
   
-  pVerbQueryLanguageLexer	lxr;
-  pVerbQueryLanguageParser psr;
-  pVerbQueryLanguageTreeParser treePsr;
+  pVaeQueryLanguageLexer	lxr;
+  pVaeQueryLanguageParser psr;
+  pVaeQueryLanguageTreeParser treePsr;
   
   pANTLR3_INPUT_STREAM istream;
   pANTLR3_COMMON_TOKEN_STREAM	tstream;
   pANTLR3_COMMON_TREE_NODE_STREAM	nodes;
-  VerbQueryLanguageTreeParser_start_return result;
+  VaeQueryLanguageTreeParser_start_return result;
   
   char *i = argv[1];
   //char i[] = "artists[name=\"Jake\'s Dilemma\"]";
 
   istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)i, (ANTLR3_UINT64)strlen(i), NULL);
 
-  lxr	= VerbQueryLanguageLexerNew(istream);
+  lxr	= VaeQueryLanguageLexerNew(istream);
   if (lxr == NULL) {
 		fprintf(stderr, "Unable to create the lexer due to malloc() failure1\n");
 		exit(ANTLR3_ERR_NOMEM);
@@ -47,7 +47,7 @@ int ANTLR3_CDECL main(int argc, char *argv[]) {
 		fprintf(stderr, "Out of memory trying to allocate token stream\n");
 		exit(ANTLR3_ERR_NOMEM);
   }
-  psr	= VerbQueryLanguageParserNew(tstream);
+  psr	= VaeQueryLanguageParserNew(tstream);
   if (psr == NULL) {
 		fprintf(stderr, "Out of memory trying to allocate parser\n");
 		exit(ANTLR3_ERR_NOMEM);
@@ -56,7 +56,7 @@ int ANTLR3_CDECL main(int argc, char *argv[]) {
 	if (psr->pParser->rec->state->errorCount == 0) {
 		nodes	= antlr3CommonTreeNodeStreamNewTree(langAST.tree, ANTLR3_SIZE_HINT);
 		printf("Nodes: %s\n", langAST.tree->toStringTree(langAST.tree)->chars);
-    treePsr	= VerbQueryLanguageTreeParserNew(nodes);
+    treePsr	= VaeQueryLanguageTreeParserNew(nodes);
 	  result = treePsr->start(treePsr);
 	  if (result.isPath) {
       printf("Path: %s\n", result.result->chars);
@@ -66,7 +66,7 @@ int ANTLR3_CDECL main(int argc, char *argv[]) {
 	  treePsr->free(treePsr);
 	  nodes->free(nodes);
 	} else {
-    printf("Unable to parse VerbQL Expression\n");
+    printf("Unable to parse VaeQL Expression\n");
   }
 	tstream->free(tstream);
 	psr->free(psr);
