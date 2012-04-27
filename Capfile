@@ -1,4 +1,7 @@
+require 'hipchat/capistrano'
+
 load 'deploy'
+
 default_environment["LC_CTYPE"] = "en_US.UTF-8"
 
 set :application, "vaeql"
@@ -7,7 +10,12 @@ set :deploy_to, "/www/#{application}"
 set :keep_releases, 3
 set :repository, "git@github.com:actionverb/#{application}"
 set :scm, :git
+set :branch, "master"
 set :user, "root"
+
+set :hipchat_token, "81af6d6bc143253fdb8a3a3b06757c"
+set :hipchat_room_name, "45693"
+set :hipchat_announce, false 
 
 role :app, "m_0_0.actionverb.com"
 
