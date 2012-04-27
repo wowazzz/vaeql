@@ -5,7 +5,8 @@ set :application, "vaeql"
 set :deploy_via, :remote_cache
 set :deploy_to, "/www/#{application}"
 set :keep_releases, 3
-set :repository, "http://svn.datadevelopment.net/actionverb/#{application}"
+set :repository, "git@github.com:actionverb/#{application}"
+set :scm, :git
 set :user, "root"
 
 role :app, "m_0_0.actionverb.com"
