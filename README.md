@@ -1,6 +1,8 @@
-# vaeql
+# VaeQL
 
-PHP Extension that provides accelerated parsing for queries
+PHP Extension that provides accelerated parsing for VaeDB queries.
+
+Build and install this before Vae Remote.
 
 
 ## Prerequisites
@@ -23,8 +25,23 @@ To compile libantlr3c:
     make
     make install
 
-Install PHP using the Homebrew instructions in vae_remote.  Do that
-first before compiling VaeQL!
+
+I recommend using Homebrew for PHP so future version management of PHP
+is easier.  To do so, run: 
+
+    brew tap homebrew/dupes
+    brew tap homebrew/versions
+    brew tap homebrew/homebrew-php
+    brew install php53
+
+As part of installing PHP 5.3 from Homebrew, you'll need to update your
+$PATH in your shell to use their PHP 5.3 as the default PHP binaries.
+This is key because VaeQL uses the "php-config" binary for its
+installation process.
+
+At this point, running `php` should work.
+
+With these two things ready, you should be able to compile VaeQL.
 
 
 ## Compiling:
@@ -36,3 +53,11 @@ Then add this line to your php.ini.  If you are using Homebrew the path
 is /usr/local/etc/php/5.3/php.ini.  Otherwise, it might be in /etc.
 
     extension=vaeql.so
+
+
+## Testing:
+
+You should be able to run this command and see some output.  There
+should be no dylib or load errors.
+
+    php -i | grep VaeQueryLanguage
