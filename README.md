@@ -19,7 +19,7 @@ To compile libantlr3c:
     wget http://www.antlr3.org/download/C/libantlr3c-3.2.tar.gz
     tar -zxvf libantlr3c-3.2.tar.gz
     cd libantlr3c-3.2
-    ./configure
+    ./configure --enable-64bit
     make
     make install
 
