@@ -1,1 +1,3 @@
 *.o
+.bundle
+vendor/bundle
