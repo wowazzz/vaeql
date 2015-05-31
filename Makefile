@@ -8,7 +8,7 @@ GEN_HEADERS = VaeQueryLanguageLexer.h VaeQueryLanguageParser.h VaeQueryLanguageT
 OBJS = VaeQueryLanguageLexer.o VaeQueryLanguageParser.o VaeQueryLanguageTreeParser.o
 HEADERS = ${GEN_HEADERS}
 	
-default: vaeql vaeql.so
+default: vaeql.so
 
 clean:
 	$(RM) vaeql *.o *.so
@@ -24,14 +24,11 @@ install-vaeql.so:
 php_vaeql.o: php_vaeql.c
 	${C} `php-config --includes` ${CFLAGS} php_vaeql.c
 	
-vaeql: vaeql.o ${OBJS}
-	${C} vaeql.o ${OBJS} -lantlr3c -g -O0 -o vaeql
-
 vaeql.o: vaeql.c
 	${C} ${CFLAGS} vaeql.c
 	
 vaeql.so: ${OBJS} php_vaeql.o
-	${C} -shared -fPIC -Wl,-undefined,dynamic_lookup php_vaeql.o ${OBJS} -lantlr3c -o vaeql.so
+	${C} ${LDFLAGS} -shared -fPIC -Wl,-undefined,dynamic_lookup php_vaeql.o ${OBJS} ${LIBS} -o vaeql.so
 	
 VaeQueryLanguageLexer.o: ${HEADERS} VaeQueryLanguageLexer.c
 	${C} ${CFLAGS} VaeQueryLanguageLexer.c

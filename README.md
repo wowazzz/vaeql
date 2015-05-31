@@ -11,8 +11,14 @@ PHP Extension that provides accelerated parsing for queries
 
 ### Installing prerequisites on Mac:
 
-    wget https://github.com/antlr/antlr3/archive/3.5.2.zip
-    tar -zxvf 3.5.2.zip
-    cd antlr3-3.5.2/runtime/C
-    aclocal
-    autoconf1
+    brew install libantlr3c
+
+
+## Compiling:
+
+    make
+    make install
+
+Then add this line to /etc/php.ini:
+
+    extension=vaeql.so
