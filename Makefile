@@ -19,6 +19,7 @@ generate: VaeQueryLanguage.g VaeQueryLanguageTreeParser.g
 install: install-vaeql.so
 
 install-vaeql.so:
+	mkdir -p `php-config --extension-dir`
 	sudo cp vaeql.so `php-config --extension-dir`
 
 php_vaeql.o: php_vaeql.c
