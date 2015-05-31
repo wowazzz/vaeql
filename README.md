@@ -61,3 +61,7 @@ You should be able to run this command and see some output.  There
 should be no dylib or load errors.
 
     php -i | grep VaeQueryLanguage
+
+This project is tested entirely using the test suite in Vae Remote.  It
+is very easy to add more tasks to that test suite and we likely do not
+need one here.
