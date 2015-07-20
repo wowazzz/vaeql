@@ -50,7 +50,8 @@ With these two things ready, you should be able to compile VaeQL.
     make install
 
 Then add this line to your php.ini.  If you are using Homebrew the path
-is /usr/local/etc/php/5.3/php.ini.  Otherwise, it might be in /etc.
+is /usr/local/etc/php/5.3/php.ini.  Otherwise, it might be in /etc.  Run
+php --ini to look for candidate locations for the file.
 
     extension=vaeql.so
 
