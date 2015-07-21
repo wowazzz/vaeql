@@ -63,17 +63,22 @@ RangeFunctionRange resolveRangeFunction(char *function, char **args) {
 }
 
 char *resolvePath(char *path) {
-  zval func, retval, param, *params[1];
+  zval *func, *retval, *param, *params[1];
   char *result;
-  INIT_ZVAL(param);
-  params[0] = &param;
-  ZVAL_STRING(params[0], path, 0);
-  ZVAL_STRING(&func, "_vaeql_path", 0);
-  if (call_user_function(EG(function_table), NULL, &func, &retval, 1, params TSRMLS_CC) == FAILURE) {
-    return "";
+
+  MAKE_STD_ZVAL(func);
+  MAKE_STD_ZVAL(retval);
+  MAKE_STD_ZVAL(param);
+  params[0] = param;
+  ZVAL_STRING(param, path, 0);
+  ZVAL_STRING(func, "_vaeql_path", 0);
+  if (call_user_function(EG(function_table), NULL, func, retval, 1, params TSRMLS_CC) == FAILURE) {
+    return strdup("");
   }
-  convert_to_string(&retval);
-  result = (char *)Z_STRVAL_P(&retval);
+  convert_to_string(retval);
+  result = strdup(Z_STRVAL_P(retval));
+
+  zval_ptr_dtor(retval);
   return result;
 }
 
@@ -88,7 +93,7 @@ char *resolveVariable(char *variable) {
   ZVAL_STRING(param, variable, 0);
   ZVAL_STRING(func, "_vaeql_variable", 0);
   if (call_user_function(EG(function_table), NULL, func, retval, 1, params TSRMLS_CC) == FAILURE) {
-    return "";
+    return strdup("");
   }
   convert_to_string(retval);
   result = strdup(Z_STRVAL_P(retval));
