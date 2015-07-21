@@ -16,7 +16,7 @@ options
 @members
 {
 
-  char *functionArgList[FUNCTION_ARG_LIST_SIZE];
+  char *functionArgList[FUNCTION_ARG_LIST_SIZE+1];
   char functionArgCount;
 
   int asBoolean(pANTLR3_STRING a) {
