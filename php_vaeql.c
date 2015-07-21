@@ -8,45 +8,52 @@
 #include "php_vaeql.h"
 
 char *resolveFunction(char *function, char **args) {
-  zval func, retval, function_param, arguments_param, *params[2];
+  zval *func, *retval, *function_param, *arguments_param, *params[2];
   char *result, **arg;
-  INIT_ZVAL(function_param);
-  params[0] = &function_param;
-  params[1] = &arguments_param;
-  ZVAL_STRING(params[0], function, 0);
-  ZVAL_STRING(&func, "_vaeql_function", 0);
-  array_init(&arguments_param);
+  MAKE_STD_ZVAL(func);
+  MAKE_STD_ZVAL(retval);
+  MAKE_STD_ZVAL(function_param);
+  MAKE_STD_ZVAL(arguments_param);
+  params[0] = function_param;
+  params[1] = arguments_param;
+  ZVAL_STRING(function_param, function, 0);
+  ZVAL_STRING(func, "_vaeql_function", 0);
+  array_init(arguments_param);
   for (arg = args; *arg; arg++) {
-    add_next_index_string(&arguments_param, *arg, 1);
+    add_next_index_string(arguments_param, *arg, 1);
   } 
-  if (call_user_function(EG(function_table), NULL, &func, &retval, 2, params TSRMLS_CC) == FAILURE) {
-    return "";
+  if (call_user_function(EG(function_table), NULL, func, retval, 2, params TSRMLS_CC) == FAILURE) {
+    return strdup("");
   }
-  convert_to_string(&retval);
-  result = (char *)Z_STRVAL_P(&retval);
+  convert_to_string(retval);
+  result = strdup(Z_STRVAL_P(retval));
+  zval_ptr_dtor(retval);
   return result;
 }
 
 RangeFunctionRange resolveRangeFunction(char *function, char **args) {
-  zval func, retval, function_param, arguments_param, *params[2], **retdata;
+  zval *func, *retval, *function_param, *arguments_param, *params[2], **retdata;
   HashTable *ret_hash;
   HashPosition pointer;
   char **arg;
   RangeFunctionRange r;
   r.low = r.high = NULL;
-  INIT_ZVAL(function_param);
-  params[0] = &function_param;
-  params[1] = &arguments_param;
-  ZVAL_STRING(params[0], function, 0);
-  ZVAL_STRING(&func, "_vaeql_range_function", 0);
-  array_init(&arguments_param);
+  MAKE_STD_ZVAL(func);
+  MAKE_STD_ZVAL(retval);
+  MAKE_STD_ZVAL(function_param);
+  MAKE_STD_ZVAL(arguments_param);
+  params[0] = function_param;
+  params[1] = arguments_param;
+  ZVAL_STRING(function_param, function, 0);
+  ZVAL_STRING(func, "_vaeql_range_function", 0);
+  array_init(arguments_param);
   for (arg = args; *arg; arg++) {
-    add_next_index_string(&arguments_param, *arg, 1);
+    add_next_index_string(arguments_param, *arg, 1);
   } 
-  if (call_user_function(EG(function_table), NULL, &func, &retval, 2, params TSRMLS_CC) == FAILURE) {
+  if (call_user_function(EG(function_table), NULL, func, retval, 2, params TSRMLS_CC) == FAILURE) {
     return r;
   }
-  ret_hash = Z_ARRVAL_P(&retval);
+  ret_hash = Z_ARRVAL_P(retval);
   if (zend_hash_num_elements(ret_hash)) {
     for (zend_hash_internal_pointer_reset_ex(ret_hash, &pointer); 
          zend_hash_get_current_data_ex(ret_hash, (void**) &retdata, &pointer) == SUCCESS; 

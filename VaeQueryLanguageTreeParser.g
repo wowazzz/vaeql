@@ -164,7 +164,9 @@ returns [ pANTLR3_STRING result ]
 	    expressionList?
 	  )
 	  {
-	    $result = newStr($FUNCTION, resolveFunction($FUNCTION.text->subString($FUNCTION.text, 0, strlen($FUNCTION.text->chars) - 1)->chars, functionArgList));
+	    char *value = resolveFunction($FUNCTION.text->subString($FUNCTION.text, 0, strlen($FUNCTION.text->chars) - 1)->chars, functionArgList);
+	    $result = newStr($FUNCTION, value);
+	    free(value);
 	  }
 	;
 
