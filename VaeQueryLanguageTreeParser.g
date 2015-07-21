@@ -145,7 +145,7 @@ returns [ pANTLR3_STRING result ]
     {
       if ($expr.isPath == 1) {
         $result = $expr.result;
-        char *value = resolveVariable($expr.result->chars);
+        char *value = resolvePath($expr.result->chars);
         $result->set8($result, value);
         free(value);
       } else {
