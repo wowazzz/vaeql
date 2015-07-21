@@ -45,7 +45,6 @@ tokens {
 	MOD = '%';
 	
 	PIPE = '|';
-	POOPOO = '$$$$$$$$$$$$' ;
 	
 	IFTRUE = '?' ;
 	COLON = ':' ;

@@ -170,9 +170,11 @@ expressionList
   : ^(COMMA expressionList expressionList) 
   | evaledExpr
     {
-      functionArgList[functionArgCount] = $evaledExpr.result->chars;
-      functionArgCount++;
-      functionArgList[functionArgCount] = NULL;
+      if (functionArgCount < FUNCTION_ARG_LIST_SIZE) {
+        functionArgList[functionArgCount] = $evaledExpr.result->chars;
+        functionArgCount++;
+        functionArgList[functionArgCount] = NULL;
+      }
     }
   ;
   
