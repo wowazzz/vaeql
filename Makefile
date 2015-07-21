@@ -1,6 +1,6 @@
 C = gcc
 CFLAGS = -g -O2 -fPIC -I/usr/local/include -I. -c
-LDFLAGS =  -L/usr/local/lib -g -o
+LDFLAGS =  -L/usr/local/lib -g
 LIBS =  -lantlr3c
 
 GEN_SRC = VaeQueryLanguageLexer.c VaeQueryLanguageParser.c VaeQueryLanguageTreeParser.c VaeQueryLanguage.tokens
