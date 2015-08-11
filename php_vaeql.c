@@ -7,6 +7,8 @@
 #include "vaeql.h"
 #include "php_vaeql.h"
 
+#define EMPTY_STRING ""
+
 char *resolveFunction(char *function, char **args) {
   zval *func, *retval, *function_param, *arguments_param, *params[2];
   char *result, **arg;
@@ -23,11 +25,10 @@ char *resolveFunction(char *function, char **args) {
     add_next_index_string(arguments_param, *arg, 1);
   } 
   if (call_user_function(EG(function_table), NULL, func, retval, 2, params TSRMLS_CC) == FAILURE) {
-    return strdup("");
+    return strdup(EMPTY_STRING);
   }
   convert_to_string(retval);
   result = strdup(Z_STRVAL_P(retval));
-  zval_ptr_dtor(retval);
   return result;
 }
 
@@ -80,12 +81,11 @@ char *resolvePath(char *path) {
   ZVAL_STRING(param, path, 0);
   ZVAL_STRING(func, "_vaeql_path", 0);
   if (call_user_function(EG(function_table), NULL, func, retval, 1, params TSRMLS_CC) == FAILURE) {
-    return strdup("");
+    return strdup(EMPTY_STRING);
   }
   convert_to_string(retval);
   result = strdup(Z_STRVAL_P(retval));
 
-  zval_ptr_dtor(retval);
   return result;
 }
 
@@ -100,12 +100,11 @@ char *resolveVariable(char *variable) {
   ZVAL_STRING(param, variable, 0);
   ZVAL_STRING(func, "_vaeql_variable", 0);
   if (call_user_function(EG(function_table), NULL, func, retval, 1, params TSRMLS_CC) == FAILURE) {
-    return strdup("");
+    return strdup(EMPTY_STRING);
   }
   convert_to_string(retval);
   result = strdup(Z_STRVAL_P(retval));
 
-  zval_ptr_dtor(retval);
   return result;
 }
 
