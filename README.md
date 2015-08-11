@@ -7,7 +7,7 @@ Build and install this before Vae Remote.
 
 ## Prerequisites
 
- - PHP 5.3
+ - PHP 5.6
  - libantlr3c (MUST be version 3.2)
 
 
@@ -32,10 +32,10 @@ is easier.  To do so, run:
     brew tap homebrew/dupes
     brew tap homebrew/versions
     brew tap homebrew/homebrew-php
-    brew install php53
+    brew install php56
 
-As part of installing PHP 5.3 from Homebrew, you'll need to update your
-$PATH in your shell to use their PHP 5.3 as the default PHP binaries.
+As part of installing PHP 5.6 from Homebrew, you'll need to update your
+$PATH in your shell to use their PHP 5.6 as the default PHP binaries.
 This is key because VaeQL uses the "php-config" binary for its
 installation process.
 
@@ -50,7 +50,7 @@ With these two things ready, you should be able to compile VaeQL.
     make install
 
 Then add this line to your php.ini.  If you are using Homebrew the path
-is /usr/local/etc/php/5.3/php.ini.  Otherwise, it might be in /etc.  Run
+is /usr/local/etc/php/5.6/php.ini.  Otherwise, it might be in /etc.  Run
 php --ini to look for candidate locations for the file.
 
     extension=vaeql.so
