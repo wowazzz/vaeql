@@ -10,106 +10,85 @@
 #define EMPTY_STRING ""
 
 char *resolveFunction(char *function, char **args) {
-  zval *func, *retval, *function_param, *arguments_param, *params[2];
+  zval func, retval, params[2];
   char *result, **arg;
-  MAKE_STD_ZVAL(func);
-  MAKE_STD_ZVAL(retval);
-  MAKE_STD_ZVAL(function_param);
-  MAKE_STD_ZVAL(arguments_param);
-  params[0] = function_param;
-  params[1] = arguments_param;
-  ZVAL_STRING(function_param, function, 1);
-  ZVAL_STRING(func, "_vaeql_function", 1);
-  array_init(arguments_param);
+  ZVAL_STRING(&params[0], function);
+  ZVAL_STRING(&func, "_vaeql_function");
+  array_init(&params[1]);
   for (arg = args; *arg; arg++) {
-    add_next_index_string(arguments_param, *arg, 1);
+    add_next_index_string(&params[1], *arg);
   } 
-  if (call_user_function(EG(function_table), NULL, func, retval, 2, params TSRMLS_CC) == FAILURE) {
+  if (call_user_function(EG(function_table), NULL, &func, &retval, 2, params) == FAILURE) {
     return strdup(EMPTY_STRING);
   }
-  convert_to_string(retval);
-  result = strdup(Z_STRVAL_P(retval));
+  convert_to_string(&retval);
+  result = strdup(Z_STRVAL_P(&retval));
   return result;
 }
 
 RangeFunctionRange resolveRangeFunction(char *function, char **args) {
-  zval *func, *retval, *function_param, *arguments_param, *params[2], **retdata;
+  zval func, retval, params[2], *retdata;
   HashTable *ret_hash;
   HashPosition pointer;
   char **arg;
   RangeFunctionRange r;
   r.low = r.high = NULL;
-  MAKE_STD_ZVAL(func);
-  MAKE_STD_ZVAL(retval);
-  MAKE_STD_ZVAL(function_param);
-  MAKE_STD_ZVAL(arguments_param);
-  params[0] = function_param;
-  params[1] = arguments_param;
-  ZVAL_STRING(function_param, function, 1);
-  ZVAL_STRING(func, "_vaeql_range_function", 1);
-  array_init(arguments_param);
+  ZVAL_STRING(&params[0], function);
+  ZVAL_STRING(&func, "_vaeql_range_function");
+  array_init(&params[1]);
   for (arg = args; *arg; arg++) {
-    add_next_index_string(arguments_param, *arg, 1);
+    add_next_index_string(&params[1], *arg);
   } 
-  if (call_user_function(EG(function_table), NULL, func, retval, 2, params TSRMLS_CC) == FAILURE) {
+  if (call_user_function(EG(function_table), NULL, &func, &retval, 2, params) == FAILURE) {
     return r;
   }
-  ret_hash = Z_ARRVAL_P(retval);
+
+  ret_hash = Z_ARRVAL_P(&retval);
   if (zend_hash_num_elements(ret_hash)) {
-    for (zend_hash_internal_pointer_reset_ex(ret_hash, &pointer); 
-         zend_hash_get_current_data_ex(ret_hash, (void**) &retdata, &pointer) == SUCCESS; 
-         zend_hash_move_forward_ex(ret_hash, &pointer)) {
-      convert_to_string_ex(retdata);
+    ZEND_HASH_FOREACH_VAL(ret_hash, retdata) {
+      convert_to_string(retdata);
       if (r.low == NULL) {
-        r.low = (char *)Z_STRVAL_PP(retdata);
+        r.low = strdup(Z_STRVAL_P(retdata));
       } else {
-        r.high = (char *)Z_STRVAL_PP(retdata);
+        r.high = strdup(Z_STRVAL_P(retdata));
       }
-    }
+    } ZEND_HASH_FOREACH_END();
   }
   return r;
 }
 
 char *resolvePath(char *path) {
-  zval *func, *retval, *param, *params[1];
+  zval func, retval, param, params[1];
   char *result;
 
-  MAKE_STD_ZVAL(func);
-  MAKE_STD_ZVAL(retval);
-  MAKE_STD_ZVAL(param);
-  params[0] = param;
-  ZVAL_STRING(param, path, 1);
-  ZVAL_STRING(func, "_vaeql_path", 1);
-  if (call_user_function(EG(function_table), NULL, func, retval, 1, params TSRMLS_CC) == FAILURE) {
+  ZVAL_STRING(&params[0], path);
+  ZVAL_STRING(&func, "_vaeql_path");
+  if (call_user_function(EG(function_table), NULL, &func, &retval, 1, params) == FAILURE) {
     return strdup(EMPTY_STRING);
   }
-  convert_to_string(retval);
-  result = strdup(Z_STRVAL_P(retval));
+  convert_to_string(&retval);
+  result = strdup(Z_STRVAL_P(&retval));
   return result;
 }
 
 char *resolveVariable(char *variable) {
-  zval *func, *retval, *param, *params[1];
+  zval func, retval, param, params[1];
   char *result;
 
-  MAKE_STD_ZVAL(func);
-  MAKE_STD_ZVAL(retval);
-  MAKE_STD_ZVAL(param);
-  params[0] = param;
-  ZVAL_STRING(param, variable, 1);
-  ZVAL_STRING(func, "_vaeql_variable", 1);
-  if (call_user_function(EG(function_table), NULL, func, retval, 1, params TSRMLS_CC) == FAILURE) {
+  ZVAL_STRING(&params[0], variable);
+  ZVAL_STRING(&func, "_vaeql_variable");
+  if (call_user_function(EG(function_table), NULL, &func, &retval, 1, params) == FAILURE) {
     return strdup(EMPTY_STRING);
   }
-  convert_to_string(retval);
-  result = strdup(Z_STRVAL_P(retval));
+  convert_to_string(&retval);
+  result = strdup(Z_STRVAL_P(&retval));
   return result;
 }
 
 ZEND_NAMED_FUNCTION(_vaeql_query_internal) {
   
   /* PHP */
-  zval **args[1];
+  zval args[1];
   char *query;
   
   /* VaeQueryLanguage */
@@ -126,12 +105,8 @@ ZEND_NAMED_FUNCTION(_vaeql_query_internal) {
   if(ZEND_NUM_ARGS() != 1 || zend_get_parameters_array_ex(1, args) != SUCCESS) {
     WRONG_PARAM_COUNT;
   }
-  if ((*args[0])->type==IS_NULL) {
-    query = (char *)0;
-  } else {
-    convert_to_string_ex(args[0]);
-    query = (char *)Z_STRVAL_PP(args[0]);
-  }
+  convert_to_string_ex(&args[0]);
+  query = (char *)Z_STRVAL_P(&args[0]);
 
   /* Lex and Parse */
   if (istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)query, (ANTLR3_UINT64)strlen(query), NULL)) {
@@ -146,7 +121,7 @@ ZEND_NAMED_FUNCTION(_vaeql_query_internal) {
             	  if (result.result) {
                   array_init(return_value);
                   add_next_index_bool(return_value, result.isPath);
-                  add_next_index_string(return_value, result.result->chars, 1); 
+                  add_next_index_string(return_value, result.result->chars); 
                 } else {
                   ZVAL_LONG(return_value, -2);
                 }
