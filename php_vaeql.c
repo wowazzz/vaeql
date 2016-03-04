@@ -21,8 +21,9 @@ char *resolveFunction(char *function, char **args) {
   if (call_user_function(EG(function_table), NULL, &func, &retval, 2, params) == FAILURE) {
     return strdup(EMPTY_STRING);
   }
-  convert_to_string(&retval);
-  result = strdup(Z_STRVAL_P(&retval));
+  zend_string *str = zval_get_string(&retval);
+  result = strdup(str->val);
+  zend_string_release(str);
   return result;
 }
 
@@ -64,8 +65,9 @@ char *resolvePath(char *path) {
   if (call_user_function(EG(function_table), NULL, &func, &retval, 1, params) == FAILURE) {
     return strdup(EMPTY_STRING);
   }
-  convert_to_string(&retval);
-  result = strdup(Z_STRVAL_P(&retval));
+  zend_string *str = zval_get_string(&retval);
+  result = strdup(str->val);
+  zend_string_release(str);
   return result;
 }
 
@@ -78,8 +80,9 @@ char *resolveVariable(char *variable) {
   if (call_user_function(EG(function_table), NULL, &func, &retval, 1, params) == FAILURE) {
     return strdup(EMPTY_STRING);
   }
-  convert_to_string(&retval);
-  result = strdup(Z_STRVAL_P(&retval));
+  zend_string *str = zval_get_string(&retval);
+  result = strdup(str->val);
+  zend_string_release(str);
   return result;
 }
 
@@ -100,11 +103,11 @@ ZEND_NAMED_FUNCTION(_vaeql_query_internal) {
   VaeQueryLanguageTreeParser_start_return result;
   
   /* Pull in arg from PHP */
-  if(ZEND_NUM_ARGS() != 1 || zend_get_parameters_array_ex(1, args) != SUCCESS) {
+  if (ZEND_NUM_ARGS() != 1 || zend_get_parameters_array_ex(1, args) != SUCCESS) {
     WRONG_PARAM_COUNT;
   }
-  convert_to_string_ex(&args[0]);
-  query = (char *)Z_STRVAL_P(&args[0]);
+  zend_string *str = zval_get_string(&args[0]);
+  query = str->val;
 
   /* Lex and Parse */
   if (istream = antlr3NewAsciiStringInPlaceStream((uint8_t *)query, (ANTLR3_UINT64)strlen(query), NULL)) {
@@ -150,6 +153,7 @@ ZEND_NAMED_FUNCTION(_vaeql_query_internal) {
   } else {
     ZVAL_LONG(return_value, -106);
   }
+  zend_string_release(str);
 }
 
 /* PHP Function Table */
