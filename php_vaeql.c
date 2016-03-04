@@ -41,24 +41,18 @@ RangeFunctionRange resolveRangeFunction(char *function, char **args) {
   if (call_user_function(EG(function_table), NULL, &func, &retval, 2, params) == FAILURE) {
     return r;
   }
-  convert_to_string(&retval);
-  r.low = atol(Z_STRVAL_P(&retval));
+  r.low = 0;
   r.high = 99999999999999;
-/*
-  ret_hash = Z_ARRVAL(retval);
-  if (zend_hash_num_elements(ret_hash)) {
-    ZEND_HASH_FOREACH_VAL(ret_hash, retdata) {
-      convert_to_string(retdata);
-      if (!foundLow) {
-        r.low = atol(Z_STRVAL_P(retdata));
-        foundLow = 1;
-      } else if (!foundHigh) {
-        r.high = atol(Z_STRVAL_P(retdata));
-        foundHigh = 1;
-      }
-    } ZEND_HASH_FOREACH_END();
-  }
-  */
+  ZEND_HASH_FOREACH_VAL(Z_ARRVAL(retval), retdata) {
+    zend_string *str = zval_get_string(retdata);
+    if (!foundLow) {
+      r.low = atol(str->val);
+      foundLow = 1;
+    } else if (!foundHigh) {
+      r.high = atol(str->val);
+      foundHigh = 1;
+    }
+  } ZEND_HASH_FOREACH_END();
   return r;
 }
 
