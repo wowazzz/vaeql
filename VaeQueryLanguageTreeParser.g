@@ -493,8 +493,8 @@ returns [ pANTLR3_STRING lowResult, pANTLR3_STRING highResult ]
 	  )
 	  {
 	    RangeFunctionRange ret = resolveRangeFunction($FUNCTION.text->subString($FUNCTION.text, 0, strlen($FUNCTION.text->chars) - 1)->chars, functionArgList);
-	    $lowResult = newStr($FUNCTION, ret.low);
-	    $highResult = newStr($FUNCTION, ret.high);
+	    $lowResult = numberResponse(ret.low, $FUNCTION);
+	    $highResult = numberResponse(ret.high, $FUNCTION);
 	  }
 	;
 	

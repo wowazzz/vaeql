@@ -29,10 +29,9 @@ char *resolveFunction(char *function, char **args) {
 RangeFunctionRange resolveRangeFunction(char *function, char **args) {
   zval func, retval, params[2], *retdata;
   HashTable *ret_hash;
-  HashPosition pointer;
-  char **arg;
+  char **arg, foundLow = 0, foundHigh = 0;
   RangeFunctionRange r;
-  r.low = r.high = NULL;
+  r.low = r.high = 0;
   ZVAL_STRING(&params[0], function);
   ZVAL_STRING(&func, "_vaeql_range_function");
   array_init(&params[1]);
@@ -42,15 +41,16 @@ RangeFunctionRange resolveRangeFunction(char *function, char **args) {
   if (call_user_function(EG(function_table), NULL, &func, &retval, 2, params) == FAILURE) {
     return r;
   }
-
-  ret_hash = Z_ARRVAL_P(&retval);
+  ret_hash = Z_ARRVAL(retval);
   if (zend_hash_num_elements(ret_hash)) {
     ZEND_HASH_FOREACH_VAL(ret_hash, retdata) {
       convert_to_string(retdata);
-      if (r.low == NULL) {
-        r.low = strdup(Z_STRVAL_P(retdata));
-      } else {
-        r.high = strdup(Z_STRVAL_P(retdata));
+      if (!foundLow) {
+        r.low = atoi(Z_STRVAL_P(retdata));
+        foundLow = 1;
+      } else if (!foundHigh) {
+        r.high = atoi(Z_STRVAL_P(retdata));
+        foundHigh = 1;
       }
     } ZEND_HASH_FOREACH_END();
   }
