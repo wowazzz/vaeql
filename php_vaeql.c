@@ -44,12 +44,11 @@ RangeFunctionRange resolveRangeFunction(char *function, char **args) {
   r.low = 0;
   r.high = 99999999999999;
   ZEND_HASH_FOREACH_VAL(Z_ARRVAL(retval), retdata) {
-    zend_string *str = zval_get_string(retdata);
     if (!foundLow) {
-      r.low = atol(str->val);
+      r.low = zval_get_long(retdata);
       foundLow = 1;
     } else if (!foundHigh) {
-      r.high = atol(str->val);
+      r.high = zval_get_long(retdata);
       foundHigh = 1;
     }
   } ZEND_HASH_FOREACH_END();
