@@ -36,6 +36,8 @@ RangeFunctionRange resolveRangeFunction(char *function, char **args) {
   ZVAL_STRING(&func, "_vaeql_range_function");
   array_init(&params[1]);
   for (arg = args; *arg; arg++) {
+
+printf("Got arg: %s\n", *arg);
     add_next_index_string(&params[1], *arg);
   } 
   if (call_user_function(EG(function_table), NULL, &func, &retval, 2, params) == FAILURE) {

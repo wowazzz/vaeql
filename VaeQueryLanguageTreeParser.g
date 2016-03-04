@@ -99,6 +99,12 @@ options
     return e->strFactory->newStr(e->strFactory, buf);
   }
 
+  pANTLR3_STRING longResponse(long t, pANTLR3_BASE_TREE e) {
+    char buf[30];
+    sprintf(buf, "\%ld", t);
+    return e->strFactory->newStr(e->strFactory, buf);
+  }
+
 }
 
 start
@@ -493,8 +499,8 @@ returns [ pANTLR3_STRING lowResult, pANTLR3_STRING highResult ]
 	  )
 	  {
 	    RangeFunctionRange ret = resolveRangeFunction($FUNCTION.text->subString($FUNCTION.text, 0, strlen($FUNCTION.text->chars) - 1)->chars, functionArgList);
-	    $lowResult = numberResponse(ret.low, $FUNCTION);
-	    $highResult = numberResponse(ret.high, $FUNCTION);
+	    $lowResult = longResponse(ret.low, $FUNCTION);
+	    $highResult = longResponse(ret.high, $FUNCTION);
 	  }
 	;
 	
