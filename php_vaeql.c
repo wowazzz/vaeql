@@ -46,10 +46,10 @@ RangeFunctionRange resolveRangeFunction(char *function, char **args) {
     ZEND_HASH_FOREACH_VAL(ret_hash, retdata) {
       convert_to_string(retdata);
       if (!foundLow) {
-        r.low = atoi(Z_STRVAL_P(retdata));
+        r.low = atol(Z_STRVAL_P(retdata));
         foundLow = 1;
       } else if (!foundHigh) {
-        r.high = atoi(Z_STRVAL_P(retdata));
+        r.high = atol(Z_STRVAL_P(retdata));
         foundHigh = 1;
       }
     } ZEND_HASH_FOREACH_END();
