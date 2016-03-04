@@ -41,6 +41,10 @@ RangeFunctionRange resolveRangeFunction(char *function, char **args) {
   if (call_user_function(EG(function_table), NULL, &func, &retval, 2, params) == FAILURE) {
     return r;
   }
+  convert_to_string(&retval);
+  r.low = atol(Z_STRVAL_P(&retval));
+  r.high = 99999999999999;
+/*
   ret_hash = Z_ARRVAL(retval);
   if (zend_hash_num_elements(ret_hash)) {
     ZEND_HASH_FOREACH_VAL(ret_hash, retdata) {
@@ -54,6 +58,7 @@ RangeFunctionRange resolveRangeFunction(char *function, char **args) {
       }
     } ZEND_HASH_FOREACH_END();
   }
+  */
   return r;
 }
 
