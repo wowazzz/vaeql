@@ -2,8 +2,8 @@
 #define VEBRQL_H_
 
 typedef struct RangeFunctionRange {
-  char *low;
-  char *high;
+  long low;
+  long high;
 } RangeFunctionRange;
 
 char *resolveFunction(char *function, char **args);

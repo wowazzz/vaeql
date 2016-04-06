@@ -7,7 +7,7 @@ Build and install this before Vae Remote.
 
 ## Prerequisites
 
- - PHP 5.6
+ - PHP 7.0
  - libantlr3c (MUST be version 3.2)
 
 
@@ -29,11 +29,11 @@ To compile libantlr3c:
 I recommend using Homebrew for PHP so future version management of PHP
 is easier.  To do so, run: 
 
-    brew install php56
-    brew install php56-opcache
+    brew install php70
+    brew install php70-opcache
 
-As part of installing PHP 5.6 from Homebrew, you'll need to update your
-$PATH in your shell to use their PHP 5.6 as the default PHP binaries.
+As part of installing PHP 7.0 from Homebrew, you'll need to update your
+$PATH in your shell to use their PHP 7.0 as the default PHP binaries.
 This is key because VaeQL uses the "php-config" binary for its
 installation process.
 
@@ -44,7 +44,9 @@ production environment and can cause errors, so you want to make sure
 it's also being used for the unit tests.  You should see output when you
 run:
 
-    php -i | grep "Zend Op"
+    php -i | grep "Zend O"
+
+... and it should mention Zend Opcache.
 
 With these two things ready, you should be able to compile VaeQL.
 
@@ -55,7 +57,7 @@ With these two things ready, you should be able to compile VaeQL.
     make install
 
 Then add this line to your php.ini.  If you are using Homebrew the path
-is /usr/local/etc/php/5.6/php.ini.  Otherwise, it might be in /etc.  Run
+is /usr/local/etc/php/7.0/php.ini.  Otherwise, it might be in /etc.  Run
 php --ini to look for candidate locations for the file.
 
     extension=vaeql.so

@@ -1,5 +1,5 @@
 C = gcc
-CFLAGS = -g -O2 -fPIC -I/usr/local/include -I. -c
+CFLAGS = -g -O2 -fPIC -Wno-parentheses -Wno-macro-redefined -Wno-pointer-sign -Wno-tautological-compare -Wno-return-type -I/usr/local/include -I. -c
 LDFLAGS =  -L/usr/local/lib -g
 LIBS =  -lantlr3c
 
