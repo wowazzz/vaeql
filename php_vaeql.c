@@ -33,7 +33,7 @@ char *resolveFunction(char *function, char **args) {
 }
 
 RangeFunctionRange resolveRangeFunction(char *function, char **args) {
-  zval *func, *retval, *function_param, *arguments_param, *params[2], *retdata;
+  zval *func, *retval, *function_param, *arguments_param, *params[2], **retdata;
   HashTable *ret_hash;
   HashPosition pointer;
   char **arg;
@@ -50,19 +50,23 @@ RangeFunctionRange resolveRangeFunction(char *function, char **args) {
   array_init(arguments_param);
   for (arg = args; *arg; arg++) {
     add_next_index_string(arguments_param, *arg, 1);
-  }
+  } 
   if (call_user_function(EG(function_table), NULL, func, retval, 2, params TSRMLS_CC) == FAILURE) {
     return r;
   }
-  ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(retval), retdata) {
-    convert_to_string_ex(retdata);
-    if (r.low == NULL) {
-      r.low = (char *)Z_STRVAL_P(retdata);
-    } else if (r.high == NULL) {
-      r.high = (char *)Z_STRVAL_P(retdata);
+  ret_hash = Z_ARRVAL_P(retval);
+  if (zend_hash_num_elements(ret_hash)) {
+    for (zend_hash_internal_pointer_reset_ex(ret_hash, &pointer); 
+         zend_hash_get_current_data_ex(ret_hash, (void**) &retdata, &pointer) == SUCCESS; 
+         zend_hash_move_forward_ex(ret_hash, &pointer)) {
+      convert_to_string_ex(retdata);
+      if (r.low == NULL) {
+        r.low = (char *)Z_STRVAL_PP(retdata);
+      } else {
+        r.high = (char *)Z_STRVAL_PP(retdata);
+      }
     }
   }
-  ZEND_HASH_FOREACH_END();
   return r;
 }
 
