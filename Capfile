@@ -1,2 +1,1 @@
-load 'deploy'
-load 'config/deploy'
+load '../actionverb-deploy/vaeql/deploy'
