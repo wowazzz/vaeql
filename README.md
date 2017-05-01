@@ -44,7 +44,7 @@ To compile libantlr3c:
     make install
 
 
-### Installing prerequisites on Mac:
+### Installing prerequisites on Mac OS X
 
 I recommend using Homebrew for PHP so future version management of PHP
 is easier.  To do so, run: 
@@ -58,7 +58,7 @@ This is key because VaeQL uses the "php-config" binary for its
 installation process.
 
 
-### Installing prerequisites on Linux:
+### Installing prerequisites on Linux
 
     apt install php7.0-dev php7.0-opcache
 
@@ -77,7 +77,7 @@ run:
 With these two things ready, you should be able to compile VaeQL.
 
 
-## Compiling:
+## Compiling
 
     make
     make install
@@ -89,7 +89,7 @@ php --ini to look for candidate locations for the file.
     extension=vaeql.so
 
 
-## Testing:
+## Testing
 
 You should be able to run this command and see some output.  There
 should be no dylib or load errors.
