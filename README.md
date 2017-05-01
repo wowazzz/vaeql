@@ -54,6 +54,7 @@ To compile libantlr3c:
 I recommend using Homebrew for PHP so future version management of PHP
 is easier.  To do so, run: 
 
+    brew tap homebrew/php
     brew install php70
     brew install php70-opcache
 
