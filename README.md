@@ -30,10 +30,9 @@ If not, see http://www.gnu.org/licenses/.
  - libantlr3c (MUST be version 3.2)
 
 
-### Installing prerequisites on Mac:
-
 DO NOT install libantlr3c using Homebrew, as that only supplies 
 version 3.4.
+On Linux, you also need to compile it from the source.
 
 To compile libantlr3c:
 
@@ -45,6 +44,8 @@ To compile libantlr3c:
     make install
 
 
+### Installing prerequisites on Mac:
+
 I recommend using Homebrew for PHP so future version management of PHP
 is easier.  To do so, run: 
 
@@ -55,6 +56,12 @@ As part of installing PHP 7.0 from Homebrew, you'll need to update your
 $PATH in your shell to use their PHP 7.0 as the default PHP binaries.
 This is key because VaeQL uses the "php-config" binary for its
 installation process.
+
+
+### Installing prerequisites on Linux:
+
+    apt install php7.0-dev php7.0-opcache
+
 
 At this point, running `php` should work.
 
