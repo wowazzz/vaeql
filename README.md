@@ -46,7 +46,7 @@ To compile libantlr3c:
 
 ### Installing prerequisites on Linux
 
-    apt install php7.0-dev php7.0-opcache
+    apt install php7.0-dev php7.0-opcache php7.0-gd
 
 
 ### Installing prerequisites on Mac OS X
