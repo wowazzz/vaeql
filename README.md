@@ -44,6 +44,11 @@ To compile libantlr3c:
     make install
 
 
+### Installing prerequisites on Linux
+
+    apt install php7.0-dev php7.0-opcache
+
+
 ### Installing prerequisites on Mac OS X
 
 I recommend using Homebrew for PHP so future version management of PHP
@@ -56,11 +61,6 @@ As part of installing PHP 7.0 from Homebrew, you'll need to update your
 $PATH in your shell to use their PHP 7.0 as the default PHP binaries.
 This is key because VaeQL uses the "php-config" binary for its
 installation process.
-
-
-### Installing prerequisites on Linux
-
-    apt install php7.0-dev php7.0-opcache
 
 
 At this point, running `php` should work.
